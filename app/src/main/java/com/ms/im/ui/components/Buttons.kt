@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,8 +21,8 @@ class Buttons {
     fun Generic(onClick: () -> Unit, placeholder: String) {
         Button(onClick = { onClick() },
             modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
+                .height(70.dp),
+            shape = RoundedCornerShape(0.dp)
             )
         {
             Text(placeholder, fontSize = 20.sp)
@@ -32,8 +33,8 @@ class Buttons {
     fun Generic(onClick: () -> Unit, placeholder: String, modifier: Modifier) {
         Button(onClick = { onClick() },
             modifier = modifier
-                .fillMaxWidth()
-                .height(70.dp)
+                .height(70.dp),
+            shape = RoundedCornerShape(0.dp)
         )
         {
             Text(placeholder, fontSize = 20.sp)
