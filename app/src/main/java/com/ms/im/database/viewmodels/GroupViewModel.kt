@@ -2,11 +2,21 @@ package com.ms.im.database.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import com.ms.im.database.entities.Group
 import com.ms.im.database.repositories.GroupRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flattenConcat
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -27,6 +37,21 @@ class GroupViewModel(private val repository: GroupRepository) : ViewModel() {
     fun resetSelectedGroup() {
         _selectedGroupId.value = null
     }
+
+    // Search variable to customize Group Flow
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
+    fun setSearchQuery(newQuery: String) {
+        _searchQuery.value = newQuery
+    }
+
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    val pagedGroups = searchQuery
+        .debounce(300)
+        .distinctUntilChanged()
+        .flatMapLatest { query -> repository.getPagedGroupsFiltered(query) }
+        .cachedIn(viewModelScope)
 
     // Get one instance by id
     suspend fun getById(id: Long): Group? = repository.getById(id)

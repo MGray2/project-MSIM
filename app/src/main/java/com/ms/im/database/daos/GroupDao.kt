@@ -1,5 +1,6 @@
 package com.ms.im.database.daos
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -25,4 +26,7 @@ interface GroupDao {
 
     @Query("SELECT * FROM group_table WHERE id = :id LIMIT 1")
     suspend fun getGroupById(id: Long): Group?
+
+    @Query("SELECT * FROM group_table WHERE name LIKE '%' || :query || '%' ORDER BY name ASC")
+    fun searchPagedGroups(query: String): PagingSource<Int, Group>
 }
