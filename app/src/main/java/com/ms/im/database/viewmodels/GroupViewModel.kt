@@ -3,6 +3,7 @@ package com.ms.im.database.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
+import com.ms.im.SortOrder
 import com.ms.im.database.entities.Group
 import com.ms.im.database.repositories.GroupRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,15 +43,31 @@ class GroupViewModel(private val repository: GroupRepository) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
-    fun setSearchQuery(newQuery: String) {
-        _searchQuery.value = newQuery
+    private val _sortOrder = MutableStateFlow(SortOrder.NameAsc)
+    val sortOrder: StateFlow<SortOrder> = _sortOrder
+
+    private val _randomSeed = MutableStateFlow(0)
+    val randomSeed: StateFlow<Int> = _randomSeed
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun setSortOrder(order: SortOrder) {
+        _sortOrder.value = order
+        if (order == SortOrder.Random) {
+            _randomSeed.value = kotlin.random.Random.nextInt()
+        }
     }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    val pagedGroups = searchQuery
+    val pagedGroups = combine(searchQuery, sortOrder, randomSeed) { query, order, seed ->
+        Triple(query, order, seed)
+    }
         .debounce(300)
         .distinctUntilChanged()
-        .flatMapLatest { query -> repository.getPagedGroupsFiltered(query) }
+        .flatMapLatest { (query, order, seed) ->
+            repository.getPagedGroupsFilteredSorted(query, order, seed) }
         .cachedIn(viewModelScope)
 
     // Get one instance by id

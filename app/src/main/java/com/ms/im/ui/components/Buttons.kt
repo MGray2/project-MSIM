@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -71,5 +72,20 @@ class Buttons {
         ) {
             Icon(imageVector = imageVector, contentDescription = "Icon")
         }
+    }
+
+    @Composable
+    fun <T> Cycle(
+        options: List<T>,
+        selected: T,
+        onOptionChange: (T) -> Unit,
+        labelMapper: (T) -> String = { it.toString() }
+    ) {
+        val currentIndex = options.indexOf(selected)
+        val nextIndex = (currentIndex + 1) % options.size
+
+        Generic({ onOptionChange(options[nextIndex]) },
+            labelMapper(selected),
+            modifier = Modifier.width(150.dp))
     }
 }

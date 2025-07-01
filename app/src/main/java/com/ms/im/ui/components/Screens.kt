@@ -1,5 +1,10 @@
 package com.ms.im.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 
 class Screens {
 
@@ -31,36 +38,46 @@ class Screens {
         confirmButton: @Composable (() -> Unit)? = null,
         cancelButton: @Composable (() -> Unit)? = null
     ) {
-        if (!visible) return
-
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .clickable(enabled = true, onClick = {}) // Prevents interaction with behind elements
+        AnimatedVisibility(
+            visible = visible,
+            enter = fadeIn(animationSpec = tween(300)),
+            exit = fadeOut(animationSpec = tween(200)),
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(1F)
         ) {
-            Surface(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(16.dp),
-                shape = RoundedCornerShape(0.dp),
-                tonalElevation = 8.dp
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = true, onClick = {}) // Prevents interaction with behind elements
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(title, style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(8.dp))
 
-                    content() // Additional content will be here
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp),
+                    shape = RoundedCornerShape(0.dp),
+                    tonalElevation = 8.dp
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(title, style = MaterialTheme.typography.titleLarge)
+                        Spacer(Modifier.height(8.dp))
 
-                    Spacer(Modifier.height(16.dp))
+                        content() // Additional content will be here
 
-                    // Bottom buttons
-                    Row(horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth())
-                    {
-                        confirmButton?.invoke()
-                        Spacer(Modifier.width(8.dp))
-                        cancelButton?.invoke()
+                        Spacer(Modifier.height(16.dp))
+
+                        // Bottom buttons
+                        Row(horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth())
+                        {
+                            confirmButton?.invoke()
+                            Spacer(Modifier.width(8.dp))
+                            cancelButton?.invoke()
+                        }
                     }
                 }
+
             }
         }
     }

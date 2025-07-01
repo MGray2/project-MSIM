@@ -39,6 +39,7 @@ import com.ms.im.ui.theme.IMTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.ms.im.SortOrder
 
 // Groups Screen
 class Activity1 : ComponentActivity() {
@@ -57,13 +58,14 @@ class Activity1 : ComponentActivity() {
             val groups = groupVM.pagedGroups.collectAsLazyPagingItems()
             val groupId = groupVM.selectedGroupId.collectAsState()
             val searchText = groupVM.searchQuery.collectAsState()
+            val sortOrder by groupVM.sortOrder.collectAsState()
+
             // Local
             val context = LocalContext.current
             var showCreateScreen by remember { mutableStateOf(false) }
             var showUpdateScreen by remember { mutableStateOf(false) }
             var showDeleteScreen by remember { mutableStateOf(false) }
             var newGroupName by remember { mutableStateOf("")}
-
 
             IMTheme {
                 Scaffold { padding ->
@@ -80,107 +82,122 @@ class Activity1 : ComponentActivity() {
                         // Search Bar
                         input.Field(searchText.value, { groupVM.setSearchQuery(it) }, "Search")
 
-                        // Create Group Mini-screen
-                        CreateGroupScreen(
-                            visible = showCreateScreen,
-                            onDismiss = { showCreateScreen = false },
-                            onSubmit = {
-                                val newGroup = Group(name = newGroupName)
-                                newGroupName = ""
-                                showCreateScreen = false
-                                groupVM.insert(newGroup)},
-                            groupName = newGroupName,
-                            onGroupNameChange = { newGroupName = it }
+                        // Sort Button
+                        button.Cycle(
+                            options = SortOrder.entries,
+                            selected = sortOrder,
+                            onOptionChange = { groupVM.setSortOrder(it) },
+                            labelMapper = { order ->
+                                when (order) {
+                                    SortOrder.NameAsc -> "Name ↑"
+                                    SortOrder.NameDesc -> "Name ↓"
+                                    SortOrder.IdAsc -> "ID ↑"
+                                    SortOrder.IdDesc -> "ID ↓"
+                                    SortOrder.Random -> "Random"
+                                } }
+                        )
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            // Window to see groups
+                            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                                items(groups.itemCount) { index ->
+                                    val group = groups[index]
+                                    if (group != null) {
+                                        Row(modifier = Modifier.fillMaxWidth()) {
+                                            button.Generic({}, group.name, modifier = Modifier.weight(1F))
+                                            button.Icon({
+                                                newGroupName = group.name
+                                                showUpdateScreen = true
+                                                groupVM.selectGroup(group.id) },
+                                                Icons.Filled.Edit)
+                                            button.Icon({
+                                                newGroupName = group.name
+                                                showDeleteScreen = true
+                                                groupVM.selectGroup(group.id) },
+                                                Icons.Filled.Delete)
+                                        }
+                                    }
+                                }
+                                // Loading more results
+                                if (groups.loadState.append is LoadState.Loading ||
+                                    groups.loadState.refresh is LoadState.Loading
+                                ) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator()
+                                        }
+                                    }
+                                }
+                                // Failure
+                                if (groups.loadState.refresh is LoadState.Error) {
+                                    val error = (groups.loadState.refresh as LoadState.Error).error
+                                    item {
+                                        Text(
+                                            text = "Error loading groups: ${error.message}",
+                                            color = Color.Red,
+                                            modifier = Modifier.padding(8.dp)
+                                        )
+                                    }
+                                }
+                                // Empty results
+                                if (groups.loadState.refresh is LoadState.NotLoading && groups.itemCount == 0) {
+                                    item {
+                                        Text(
+                                            text = "No groups found.",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+                            }
+                            // Create Group Mini-screen
+                            CreateGroupScreen(
+                                visible = showCreateScreen,
+                                onDismiss = { showCreateScreen = false },
+                                onSubmit = {
+                                    val newGroup = Group(name = newGroupName)
+                                    newGroupName = ""
+                                    showCreateScreen = false
+                                    groupVM.insert(newGroup)},
+                                groupName = newGroupName,
+                                onGroupNameChange = { newGroupName = it }
                             )
 
-                        // Update Group Mini-screen
-                        UpdateGroupScreen(
-                            visible = showUpdateScreen,
-                            onDismiss = { showUpdateScreen = false },
-                            onSubmit = {
-                                groupId.value?.let { id ->
-                                    groupVM.updateById(id, newGroupName)
-                                    groupVM.resetSelectedGroup()
-                                }
-                                newGroupName = ""
-                                showUpdateScreen = false
-                            },
-                            groupName = newGroupName,
-                            onGroupNameChange = { newGroupName = it }
-                        )
-
-                        // Delete Group Mini-screen
-                        DeleteGroupScreen(
-                            visible = showDeleteScreen,
-                            onDismiss = { showDeleteScreen = false },
-                            onSubmit = {
-                                groupId.value?.let { id ->
-                                    groupVM.deleteById(id)
-                                    groupVM.resetSelectedGroup()
-                                }
-                                newGroupName = ""
-                                showDeleteScreen = false
-                            },
-                            groupName = newGroupName
-                        )
-
-                        // Window to see groups
-                        LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                            items(groups.itemCount) { index ->
-                                val group = groups[index]
-                                if (group != null) {
-                                    Row(modifier = Modifier.fillMaxWidth()) {
-                                        button.Generic({}, group.name, modifier = Modifier.weight(1F))
-                                        button.Icon({
-                                            newGroupName = group.name
-                                            showUpdateScreen = true
-                                            groupVM.selectGroup(group.id) },
-                                            Icons.Filled.Edit)
-                                        button.Icon({
-                                            newGroupName = group.name
-                                            showDeleteScreen = true
-                                            groupVM.selectGroup(group.id) },
-                                            Icons.Filled.Delete)
+                            // Update Group Mini-screen
+                            UpdateGroupScreen(
+                                visible = showUpdateScreen,
+                                onDismiss = { showUpdateScreen = false },
+                                onSubmit = {
+                                    groupId.value?.let { id ->
+                                        groupVM.updateById(id, newGroupName)
+                                        groupVM.resetSelectedGroup()
                                     }
-                                }
-                            }
-                            // Loading more results
-                            if (groups.loadState.append is LoadState.Loading ||
-                                groups.loadState.refresh is LoadState.Loading
-                            ) {
-                                item {
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator()
+                                    newGroupName = ""
+                                    showUpdateScreen = false
+                                },
+                                groupName = newGroupName,
+                                onGroupNameChange = { newGroupName = it }
+                            )
+
+                            // Delete Group Mini-screen
+                            DeleteGroupScreen(
+                                visible = showDeleteScreen,
+                                onDismiss = { showDeleteScreen = false },
+                                onSubmit = {
+                                    groupId.value?.let { id ->
+                                        groupVM.deleteById(id)
+                                        groupVM.resetSelectedGroup()
                                     }
-                                }
-                            }
-                            // Failure
-                            if (groups.loadState.refresh is LoadState.Error) {
-                                val error = (groups.loadState.refresh as LoadState.Error).error
-                                item {
-                                    Text(
-                                        text = "Error loading groups: ${error.message}",
-                                        color = Color.Red,
-                                        modifier = Modifier.padding(8.dp)
-                                    )
-                                }
-                            }
-                            // Empty results
-                            if (groups.loadState.refresh is LoadState.NotLoading && groups.itemCount == 0) {
-                                item {
-                                    Text(
-                                        text = "No groups found.",
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
+                                    newGroupName = ""
+                                    showDeleteScreen = false
+                                },
+                                groupName = newGroupName
+                            )
                         }
                     }
                 }

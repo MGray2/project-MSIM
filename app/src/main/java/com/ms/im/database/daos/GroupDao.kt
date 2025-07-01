@@ -29,4 +29,25 @@ interface GroupDao {
 
     @Query("SELECT * FROM group_table WHERE name LIKE '%' || :query || '%' ORDER BY name ASC")
     fun searchPagedGroups(query: String): PagingSource<Int, Group>
+
+    @Query("SELECT * FROM group_table WHERE name LIKE '%' || :query || '%' ORDER BY name ASC")
+    fun searchGroupsByNameAsc(query: String): PagingSource<Int, Group>
+
+    @Query("SELECT * FROM group_table WHERE name LIKE '%' || :query || '%' ORDER BY name DESC")
+    fun searchGroupsByNameDesc(query: String): PagingSource<Int, Group>
+
+    @Query("SELECT * FROM group_table WHERE name LIKE '%' || :query || '%' ORDER BY id ASC")
+    fun searchGroupsByIdAsc(query: String): PagingSource<Int, Group>
+
+    @Query("SELECT * FROM group_table WHERE name LIKE '%' || :query || '%' ORDER BY id DESC")
+    fun searchGroupsByIdDesc(query: String): PagingSource<Int, Group>
+
+    @Query("""
+    SELECT * FROM group_table 
+    WHERE name LIKE '%' || :query || '%' 
+    ORDER BY (ABS(id * :seed) % 10000)
+""")
+    fun searchGroupsByRandom(query: String, seed: Int): PagingSource<Int, Group>
+
+
 }
