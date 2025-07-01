@@ -1,5 +1,6 @@
 package com.ms.im.activities
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -103,7 +104,11 @@ class Activity1 : ComponentActivity() {
                                     val group = groups[index]
                                     if (group != null) {
                                         Row(modifier = Modifier.fillMaxWidth()) {
-                                            button.Generic({}, group.name, modifier = Modifier.weight(1F))
+                                            button.Generic({
+                                                val intent = Intent(context, Activity2::class.java)
+                                                intent.putExtra("selectedGroup", group)
+                                                context.startActivity(intent)
+                                            }, group.name, modifier = Modifier.weight(1F))
                                             button.Icon({
                                                 newGroupName = group.name
                                                 showUpdateScreen = true
