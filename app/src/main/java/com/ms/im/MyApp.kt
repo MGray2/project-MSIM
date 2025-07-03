@@ -16,10 +16,14 @@ class MyApp : Application() {
     // Repositories
     private val groupRepository by lazy { GroupRepository(database.groupDao()) }
     private val itemRepository by lazy { ItemRepository(database.itemDao()) }
-    private val attributeRepository by lazy { AttributeRepository(database.attributeDao()) }
+    private val attributeTemplateRepository by lazy {
+        AttributeTemplateRepository(database.attributeTemplateDao())}
+    private val attributeInstanceRepository by lazy {
+        AttributeInstanceRepository(database.attributeInstanceDao())}
 
     // ViewModel Factories
     val groupViewModelFactory by lazy { GroupFactory(groupRepository) }
     val itemViewModelFactory by lazy { ItemFactory(itemRepository) }
-    val attributeViewModelFactory by lazy { AttributeFactory(attributeRepository) }
+    val attributeTemplateFactory by lazy { AttributeTemplateFactory(attributeTemplateRepository)}
+    val attributeInstanceFactory by lazy { AttributeInstanceFactory(attributeInstanceRepository)}
 }

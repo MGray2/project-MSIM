@@ -10,7 +10,7 @@ import com.ms.im.database.daos.*
 import com.ms.im.database.entities.*
 
 @Database(
-    entities = [Group::class, Item::class, Attribute::class],
+    entities = [Group::class, Item::class, AttributeTemplate::class, AttributeInstance::class],
     version = 1,
     exportSchema = false
 )
@@ -19,7 +19,8 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun groupDao(): GroupDao
     abstract fun itemDao(): ItemDao
-    abstract fun attributeDao(): AttributeDao
+    abstract fun attributeTemplateDao(): AttributeTemplateDao
+    abstract fun attributeInstanceDao(): AttributeInstanceDao
 
     companion object {
         @Volatile

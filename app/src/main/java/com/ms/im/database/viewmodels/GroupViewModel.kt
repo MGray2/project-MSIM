@@ -21,7 +21,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class GroupViewModel(private val repository: GroupRepository) : ViewModel() {
+class GroupViewModel(
+    private val repository: GroupRepository
+) : ViewModel() {
 
     // All instances
     val allGroups: StateFlow<List<Group>> = repository.allGroups

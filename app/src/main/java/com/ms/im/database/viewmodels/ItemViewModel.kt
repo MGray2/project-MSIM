@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class ItemViewModel(private val repository: ItemRepository) : ViewModel() {
+class ItemViewModel(
+    private val repository: ItemRepository
+) : ViewModel() {
 
     private val _selectedGroupId = MutableStateFlow<Long?>(null)
     private val _itemsInGroup = MutableStateFlow<List<Item>>(emptyList())

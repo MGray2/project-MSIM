@@ -16,6 +16,14 @@ class ItemRepository(private val dao: ItemDao) {
         return dao.getItemById(id)
     }
 
+    suspend fun getTemplatesByGroup(groupId: Long): List<Item> {
+        return dao.getTemplatesByGroup(groupId)
+    }
+
+    suspend fun getInstancesByTemplate(templateId: Long): List<Item> {
+        return dao.getInstancesByTemplate(templateId)
+    }
+
     // Insert
     suspend fun insert(item: Item): Long {
         return dao.insert(item)

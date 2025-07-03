@@ -5,26 +5,28 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "item_table",
+    tableName = "attribute_instance_table",
     foreignKeys = [
         ForeignKey(
-            entity = Group::class,
+            entity = Item::class,
             parentColumns = ["id"],
-            childColumns = ["groupId"],
+            childColumns = ["itemId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Item::class,
+            entity = AttributeTemplate::class,
             parentColumns = ["id"],
             childColumns = ["templateId"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
-data class Item(
+data class AttributeInstance(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
-    val groupId: Long, // id of Group
-    val name: String, // Item Name
-    val isTemplate: Boolean = false,
-    val templateId: Long? = null // only non-null for instances
+    val itemId: Long, // the instance item this belongs to
+    val templateId: Long, // the attribute it's referencing
+    val valueText: String? = null,
+    val valueNumber: Long? = null,
+    val valueDecimal: Double? = null,
+    val valueBool: Boolean? = null
 )
