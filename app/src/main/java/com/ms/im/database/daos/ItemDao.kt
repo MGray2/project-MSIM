@@ -1,5 +1,6 @@
 package com.ms.im.database.daos
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -31,4 +32,39 @@ interface ItemDao {
 
     @Query("SELECT * FROM item_table WHERE templateId = :templateId AND isTemplate = 0")
     suspend fun getInstancesByTemplate(templateId: Long): List<Item>
+
+    @Query("""
+        SELECT * FROM item_table 
+        WHERE isTemplate = 1 AND groupId = :groupId AND name LIKE '%' || :query || '%' 
+        ORDER BY name ASC
+    """)
+    fun searchTemplatesByNameAsc(query: String, groupId: Long): PagingSource<Int, Item>
+
+    @Query("""
+        SELECT * FROM item_table 
+        WHERE isTemplate = 1 AND groupId = :groupId AND name LIKE '%' || :query || '%' 
+        ORDER BY name DESC
+    """)
+    fun searchTemplatesByNameDesc(query: String, groupId: Long): PagingSource<Int, Item>
+
+    @Query("""
+        SELECT * FROM item_table 
+        WHERE isTemplate = 1 AND groupId = :groupId AND name LIKE '%' || :query || '%' 
+        ORDER BY id ASC
+    """)
+    fun searchTemplatesByIdAsc(query: String, groupId: Long): PagingSource<Int, Item>
+
+    @Query("""
+        SELECT * FROM item_table 
+        WHERE isTemplate = 1 AND groupId = :groupId AND name LIKE '%' || :query || '%' 
+        ORDER BY id DESC
+    """)
+    fun searchTemplatesByIdDesc(query: String, groupId: Long): PagingSource<Int, Item>
+
+    @Query("""
+        SELECT * FROM item_table 
+        WHERE isTemplate = 1 AND groupId = :groupId AND name LIKE '%' || :query || '%' 
+        ORDER BY (ABS(id * :seed) % 10000)
+    """)
+    fun searchTemplatesByRandom(query: String, groupId: Long, seed: Int): PagingSource<Int, Item>
 }

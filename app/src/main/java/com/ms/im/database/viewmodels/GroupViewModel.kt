@@ -41,10 +41,11 @@ class GroupViewModel(
         _selectedGroupId.value = null
     }
 
-    // Search variable to customize Group Flow
+    // Search bar variable
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
+    // For sort cycle button
     private val _sortOrder = MutableStateFlow(SortOrder.NameAsc)
     val sortOrder: StateFlow<SortOrder> = _sortOrder
 
