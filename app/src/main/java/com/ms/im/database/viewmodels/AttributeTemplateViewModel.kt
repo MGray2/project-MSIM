@@ -6,6 +6,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.ms.im.database.entities.AttributeTemplate
 import com.ms.im.database.repositories.AttributeTemplateRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class AttributeTemplateViewModel(
@@ -13,9 +14,8 @@ class AttributeTemplateViewModel(
 ) : ViewModel() {
 
     // Fetch all templates for a given item
-    fun getTemplatesByItem(itemId: Long): LiveData<List<AttributeTemplate>> = liveData {
-        emit(repository.getByItem(itemId))
-    }
+    fun getTemplatesByItem(itemId: Long): Flow<List<AttributeTemplate>> = repository.getByItem(itemId)
+
 
     // Insert a single template
     fun insert(template: AttributeTemplate) = viewModelScope.launch {
@@ -31,6 +31,11 @@ class AttributeTemplateViewModel(
     fun update(template: AttributeTemplate) = viewModelScope.launch {
         repository.update(template)
     }
+
+    fun replaceAttributes(itemId: Long, newAttributes: List<AttributeTemplate>) = viewModelScope.launch {
+            repository.replaceAttributes(itemId, newAttributes)
+        }
+
 
     // Delete a template
     fun delete(template: AttributeTemplate) = viewModelScope.launch {

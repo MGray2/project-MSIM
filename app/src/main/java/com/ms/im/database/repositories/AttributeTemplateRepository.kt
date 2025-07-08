@@ -2,11 +2,12 @@ package com.ms.im.database.repositories
 
 import com.ms.im.database.daos.AttributeTemplateDao
 import com.ms.im.database.entities.AttributeTemplate
+import kotlinx.coroutines.flow.Flow
 
 class AttributeTemplateRepository(private val dao: AttributeTemplateDao) {
 
-    suspend fun getByItem(itemId: Long): List<AttributeTemplate> {
-        return dao.getAttributesForTemplate(itemId)
+    fun getByItem(itemId: Long): Flow<List<AttributeTemplate>> {
+        return dao.getTemplatesByItem(itemId)
     }
 
     suspend fun insert(attribute: AttributeTemplate): Long {
@@ -23,5 +24,15 @@ class AttributeTemplateRepository(private val dao: AttributeTemplateDao) {
 
     suspend fun delete(attribute: AttributeTemplate) {
         dao.delete(attribute)
+    }
+
+    suspend fun deleteAllForItem(itemId: Long) {
+        dao.deleteAllForItem(itemId)
+    }
+
+    suspend fun replaceAttributes(itemId: Long, newAttributes: List<AttributeTemplate>) {
+        dao.deleteAllForItem(itemId)
+        dao.insertAll(newAttributes)
+
     }
 }

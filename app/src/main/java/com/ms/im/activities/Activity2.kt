@@ -13,9 +13,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.map
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.ms.im.AttributeTemplateDraft
@@ -39,6 +44,7 @@ import com.ms.im.ui.components.Buttons
 import com.ms.im.ui.components.Inputs
 import com.ms.im.ui.components.Screens
 import com.ms.im.ui.theme.IMTheme
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 // Item Model Screen
@@ -60,18 +66,41 @@ class Activity2 : ComponentActivity() {
             val tempVM: AttributeTemplateViewModel = viewModel(factory = app.attributeTemplateFactory)
 
             // Local
-            val group = intent.getParcelableExtra("selectedGroup", Group::class.java)
+            val selectedGroup = intent.getParcelableExtra("selectedGroup", Group::class.java)
 
-            val groupId = itemVM.selectedGroupId
+            val selectedGroupId = itemVM.selectedGroupId
+            val selectedTemplateId = itemVM.selectedTemplateId.collectAsState()
             val templates = itemVM.pagedTemplates.collectAsLazyPagingItems()
             var showCreateScreen by remember { mutableStateOf(false) }
+            var showUpdateScreen by remember { mutableStateOf(false) }
+            var showDeleteScreen by remember { mutableStateOf(false) }
             var itemName by remember { mutableStateOf("") }
             val attributeDrafts = remember { mutableStateListOf<AttributeTemplateDraft>() }
             val scope = rememberCoroutineScope()
 
             // Setup
             itemVM.resetSelectedGroupId()
-            itemVM.setSelectedGroupId(group?.id)
+            itemVM.setSelectedGroupId(selectedGroup?.id)
+
+            LaunchedEffect(selectedTemplateId.value) {
+                selectedTemplateId.value?.let { id ->
+                    val item = itemVM.getById(id)
+                    tempVM.getTemplatesByItem(id).collect { attributes ->
+                        if (item != null) {
+                            itemName = item.name
+                            attributeDrafts.clear()
+                            attributeDrafts.addAll(
+                                attributes.map {
+                                    AttributeTemplateDraft(
+                                        name = it.name,
+                                        type = it.type
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             IMTheme {
                 Scaffold { padding ->
@@ -80,7 +109,7 @@ class Activity2 : ComponentActivity() {
                         .padding(padding)
                     ) {
                         // Top Bar
-                        Text("Groups > ${group?.name}")
+                        Text("Groups > ${selectedGroup?.name}")
                         button.Generic({ showCreateScreen = true }, "Create Item")
 
                         Box(modifier = Modifier.fillMaxSize()) {
@@ -89,16 +118,24 @@ class Activity2 : ComponentActivity() {
                                 items(templates.itemCount) { index ->
                                     val template = templates[index]
                                     if (template != null) {
-                                        button.Generic({}, template.name)
+                                        Row {
+                                            button.Generic({}, template.name)
+                                            button.Icon({
+                                                itemVM.setSelectedTemplateId(template.id)
+                                                showUpdateScreen = true
+                                            }, Icons.Filled.Edit)
+                                        }
                                     }
 
                                 }
                             }
+
+                            // Create Item Template Screen
                             CreateTemplateScreen(
                                 visible = showCreateScreen,
                                 onDismiss = { showCreateScreen = false },
                                 onSubmit = { name, drafts ->
-                                    groupId.value?.let { id ->
+                                    selectedGroupId.value?.let { id ->
                                         scope.launch {
                                             val itemId = itemVM.insertReturn(
                                                 Item(
@@ -117,6 +154,7 @@ class Activity2 : ComponentActivity() {
                                             tempVM.insertAll(attributes)
                                         }
                                     }
+                                    // Reset
                                     showCreateScreen = false
                                     itemName = ""
                                     attributeDrafts.clear()
@@ -124,6 +162,38 @@ class Activity2 : ComponentActivity() {
                                 },
                                 templateName = itemName,
                                 onTemplateNameChange = { itemName = it },
+                                attributeDrafts = attributeDrafts
+                            )
+
+                            // Update Item Template Screen
+                            UpdateTemplateScreen(
+                                visible = showUpdateScreen,
+                                onDismiss = { showUpdateScreen = false },
+                                onSubmit = { templateId, drafts ->
+                                    if (templateId == null) return@UpdateTemplateScreen
+
+                                    scope.launch {
+                                        val item = itemVM.getById(templateId) ?: return@launch
+                                        itemVM.update(item.copy(name = itemName))
+
+                                        val newAttributes = drafts.map { draft ->
+                                            AttributeTemplate(
+                                                name = draft.name,
+                                                type = draft.type,
+                                                itemId = item.id
+                                            )
+                                        }
+                                        tempVM.replaceAttributes(item.id, newAttributes)
+                                        // Reset
+                                        showUpdateScreen = false
+                                        itemName = ""
+                                        attributeDrafts.clear()
+                                        itemVM.resetSelectedTemplateId()
+                                    }
+                                },
+                                templateId = selectedTemplateId.value,
+                                templateName = itemName,
+                                onTemplateNameChange = { itemName = it},
                                 attributeDrafts = attributeDrafts
                             )
                         }
@@ -156,8 +226,37 @@ class Activity2 : ComponentActivity() {
                 }
                 button.Generic({ attributeDrafts.add(AttributeTemplateDraft() )}, "Add Attribute")
                       },
-            confirmButton = { button.Generic({onSubmit(templateName, attributeDrafts.toList())}, "Save") },
+            confirmButton = { button.Generic( {onSubmit(templateName, attributeDrafts.toList())}, "Save") },
             cancelButton = { button.Generic(onDismiss, "Cancel") })
+    }
+
+    @Composable
+    fun UpdateTemplateScreen(
+        visible: Boolean,
+        onDismiss: () -> Unit,
+        onSubmit: (Long?, List<AttributeTemplateDraft>) -> Unit,
+        templateId: Long?,
+        templateName: String,
+        onTemplateNameChange: (String) -> Unit,
+        attributeDrafts: SnapshotStateList<AttributeTemplateDraft>
+    ) {
+        screen.MiniScreen(
+            visible = visible,
+            onDismiss = onDismiss,
+            title = "Edit Item Design",
+            content = {
+                input.Field(templateName, onTemplateNameChange, "Item Name")
+                attributeDrafts.forEachIndexed { index, draft ->
+                    AttributeDraftField(
+                        draft = draft,
+                        onRemove = { attributeDrafts.removeAt(index) }
+                    )
+                }
+                button.Generic({ attributeDrafts.add(AttributeTemplateDraft()) }, "Add Attribute")
+                      },
+            confirmButton = { button.Generic({ onSubmit(templateId, attributeDrafts.toList()) }, "Save") },
+            cancelButton = { button.Generic(onDismiss, "Cancel") }
+        )
     }
 
     @Composable

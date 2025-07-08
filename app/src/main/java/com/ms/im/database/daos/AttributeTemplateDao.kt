@@ -7,11 +7,13 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.ms.im.database.entities.AttributeTemplate
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AttributeTemplateDao {
-    @Query("SELECT * FROM attribute_template_table WHERE itemId = :templateItemId ORDER BY id ASC")
-    suspend fun getAttributesForTemplate(templateItemId: Long): List<AttributeTemplate>
+
+    @Query("SELECT * FROM attribute_template_table WHERE itemId = :itemId")
+    fun getTemplatesByItem(itemId: Long): Flow<List<AttributeTemplate>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(attributeTemplate: AttributeTemplate): Long
@@ -24,4 +26,7 @@ interface AttributeTemplateDao {
 
     @Delete
     suspend fun delete(attributeTemplate: AttributeTemplate)
+
+    @Query("DELETE FROM attribute_template_table WHERE itemId = :itemId")
+    suspend fun deleteAllForItem(itemId: Long)
 }

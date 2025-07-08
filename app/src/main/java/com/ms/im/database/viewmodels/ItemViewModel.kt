@@ -36,9 +36,13 @@ class ItemViewModel(
     private val _itemsInGroup = MutableStateFlow<List<Item>>(emptyList())
     val itemsInGroup: StateFlow<List<Item>> = _itemsInGroup.asStateFlow()
 
-    // Currently selected group (nullable)
+    // Currently selected Group (nullable)
     private val _selectedGroupId = MutableStateFlow<Long?>(null)
     val selectedGroupId: StateFlow<Long?> = _selectedGroupId
+
+    // Currently selected Item (nullable)
+    private val _selectedTemplateId = MutableStateFlow<Long?>(null)
+    val selectedTemplateId: StateFlow<Long?> = _selectedTemplateId
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     val pagedTemplates: Flow<PagingData<Item>> =
@@ -70,6 +74,14 @@ class ItemViewModel(
 
     fun resetSelectedGroupId() {
         _selectedGroupId.value = null
+    }
+
+    fun setSelectedTemplateId(id: Long?) {
+        _selectedTemplateId.value = id
+    }
+
+    fun resetSelectedTemplateId() {
+        _selectedTemplateId.value = null
     }
 
     fun selectGroup(groupId: Long) {
