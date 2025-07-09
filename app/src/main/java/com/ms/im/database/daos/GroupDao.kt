@@ -21,12 +21,14 @@ interface GroupDao {
     @Delete
     suspend fun delete(group: Group)
 
+    // Getters
     @Query("SELECT * FROM group_table ORDER BY name ASC")
     fun getAllGroups(): Flow<List<Group>>
 
     @Query("SELECT * FROM group_table WHERE id = :id LIMIT 1")
     suspend fun getGroupById(id: Long): Group?
 
+    // Search functions
     @Query("SELECT * FROM group_table WHERE name LIKE '%' || :query || '%' ORDER BY name ASC")
     fun searchPagedGroups(query: String): PagingSource<Int, Group>
 

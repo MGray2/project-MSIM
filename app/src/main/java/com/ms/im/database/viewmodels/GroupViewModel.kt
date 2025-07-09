@@ -25,7 +25,8 @@ class GroupViewModel(
     private val repository: GroupRepository
 ) : ViewModel() {
 
-    // All instances
+    // ** Viewmodel variables
+
     val allGroups: StateFlow<List<Group>> = repository.allGroups
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -52,6 +53,10 @@ class GroupViewModel(
     private val _randomSeed = MutableStateFlow(0)
     val randomSeed: StateFlow<Int> = _randomSeed
 
+    // Get
+    suspend fun getById(id: Long): Group? = repository.getById(id)
+
+    // Setters
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -72,9 +77,6 @@ class GroupViewModel(
         .flatMapLatest { (query, order, seed) ->
             repository.getPagedGroupsFilteredSorted(query, order, seed) }
         .cachedIn(viewModelScope)
-
-    // Get one instance by id
-    suspend fun getById(id: Long): Group? = repository.getById(id)
 
     // Insert
     fun insert(group: Group) = viewModelScope.launch {

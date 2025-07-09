@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 class GroupRepository(private val dao: GroupDao) {
 
-    // Get
+    // Getters
     val allGroups: Flow<List<Group>> = dao.getAllGroups()
 
     suspend fun getById(id: Long): Group? {

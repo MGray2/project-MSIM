@@ -25,6 +25,8 @@ class ItemViewModel(
     private val repository: ItemRepository
 ) : ViewModel() {
 
+    // ** Viewmodel variables **
+
     // Search bar variable
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
@@ -60,6 +62,8 @@ class ItemViewModel(
             }
             .cachedIn(viewModelScope)
 
+    // Setters
+
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -88,6 +92,10 @@ class ItemViewModel(
         _selectedGroupId.value = groupId
     }
 
+    // Get
+    suspend fun getById(id: Long): Item? = repository.getById(id)
+
+    // Insert
     fun insert(item: Item) = viewModelScope.launch {
         repository.insert(item)
     }
@@ -96,10 +104,12 @@ class ItemViewModel(
         return repository.insert(item)
     }
 
+    // Update
     fun update(item: Item) = viewModelScope.launch {
         repository.update(item)
     }
 
+    // Delete
     fun delete(item: Item) = viewModelScope.launch {
         repository.delete(item)
     }
@@ -110,8 +120,6 @@ class ItemViewModel(
             if (target != null) repository.delete(target)
         }
     }
-
-    suspend fun getById(id: Long): Item? = repository.getById(id)
 
     init {
         viewModelScope.launch {

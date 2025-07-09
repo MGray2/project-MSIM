@@ -21,6 +21,7 @@ interface ItemDao {
     @Delete
     suspend fun delete(item: Item)
 
+    // Getters
     @Query("SELECT * FROM item_table WHERE groupId = :groupId ORDER BY name ASC")
     fun getItemsByGroup(groupId: Long): Flow<List<Item>>
 
@@ -33,6 +34,7 @@ interface ItemDao {
     @Query("SELECT * FROM item_table WHERE templateId = :templateId AND isTemplate = 0")
     suspend fun getInstancesByTemplate(templateId: Long): List<Item>
 
+    // Search functions
     @Query("""
         SELECT * FROM item_table 
         WHERE isTemplate = 1 AND groupId = :groupId AND name LIKE '%' || :query || '%' 

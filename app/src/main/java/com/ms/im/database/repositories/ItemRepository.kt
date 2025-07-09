@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 
 class ItemRepository(private val dao: ItemDao) {
 
+    // Getters
     fun getPagedTemplatesFiltered(
         query: String,
         groupId: Long,
@@ -31,12 +32,10 @@ class ItemRepository(private val dao: ItemDao) {
         ).flow
     }
 
-    // Get Items from Group
     fun getItemsByGroup(groupId: Long): Flow<List<Item>> {
         return dao.getItemsByGroup(groupId)
     }
 
-    // Get one instance by id
     suspend fun getById(id: Long): Item? {
         return dao.getItemById(id)
     }
