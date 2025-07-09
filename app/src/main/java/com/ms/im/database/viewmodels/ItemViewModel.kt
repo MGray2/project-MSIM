@@ -104,6 +104,13 @@ class ItemViewModel(
         repository.delete(item)
     }
 
+    fun deleteById(id: Long) {
+        viewModelScope.launch {
+            val target = repository.getById(id)
+            if (target != null) repository.delete(target)
+        }
+    }
+
     suspend fun getById(id: Long): Item? = repository.getById(id)
 
     init {

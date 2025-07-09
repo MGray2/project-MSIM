@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -124,6 +125,10 @@ class Activity2 : ComponentActivity() {
                                                 itemVM.setSelectedTemplateId(template.id)
                                                 showUpdateScreen = true
                                             }, Icons.Filled.Edit)
+                                            button.Icon({
+                                                itemVM.setSelectedTemplateId(template.id)
+                                                showDeleteScreen = true
+                                            }, Icons.Filled.Delete)
                                         }
                                     }
 
@@ -196,6 +201,22 @@ class Activity2 : ComponentActivity() {
                                 onTemplateNameChange = { itemName = it},
                                 attributeDrafts = attributeDrafts
                             )
+
+                            // Delete Item Template Screen
+                            DeleteTemplateScreen(
+                                visible = showDeleteScreen,
+                                onDismiss = { showDeleteScreen = false },
+                                onSubmit = { templateId ->
+                                    templateId?.let {
+                                        itemVM.deleteById(templateId)
+                                    }
+                                    showDeleteScreen = false
+                                    itemVM.resetSelectedTemplateId()
+                                    itemName = ""
+                                },
+                                templateId = selectedTemplateId.value,
+                                templateName = itemName
+                            )
                         }
                     }
                 }
@@ -255,6 +276,26 @@ class Activity2 : ComponentActivity() {
                 button.Generic({ attributeDrafts.add(AttributeTemplateDraft()) }, "Add Attribute")
                       },
             confirmButton = { button.Generic({ onSubmit(templateId, attributeDrafts.toList()) }, "Save") },
+            cancelButton = { button.Generic(onDismiss, "Cancel") }
+        )
+    }
+
+    @Composable
+    fun DeleteTemplateScreen(
+        visible: Boolean,
+        onDismiss: () -> Unit,
+        onSubmit: (Long?) -> Unit,
+        templateId: Long?,
+        templateName: String,
+    ) {
+        screen.MiniScreen(
+            visible = visible,
+            onDismiss = onDismiss,
+            title = "Delete Item Design",
+            content = {
+                Text("Are you sure you want to delete $templateName?")
+            },
+            confirmButton = { button.Generic({ onSubmit(templateId) }, "Confirm") },
             cancelButton = { button.Generic(onDismiss, "Cancel") }
         )
     }
