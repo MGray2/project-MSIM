@@ -140,7 +140,7 @@ class Activity1 : ComponentActivity() {
                                     val error = (groups.loadState.refresh as LoadState.Error).error
                                     item {
                                         Text(
-                                            text = "Error loading groups: ${error.message}",
+                                            text = "Error loading results: ${error.message}",
                                             color = Color.Red,
                                             modifier = Modifier.padding(8.dp)
                                         )
@@ -150,7 +150,7 @@ class Activity1 : ComponentActivity() {
                                 if (groups.loadState.refresh is LoadState.NotLoading && groups.itemCount == 0) {
                                     item {
                                         Text(
-                                            text = "No groups found.",
+                                            text = "No results.",
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .padding(16.dp),

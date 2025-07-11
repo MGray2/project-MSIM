@@ -1,5 +1,6 @@
 package com.ms.im.activities
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,6 +17,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,14 +31,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.map
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.ms.im.AttributeTemplateDraft
 import com.ms.im.AttributeType
 import com.ms.im.MyApp
+import com.ms.im.SortOrder
 import com.ms.im.database.entities.AttributeTemplate
 import com.ms.im.database.entities.Group
 import com.ms.im.database.entities.Item
@@ -65,6 +74,8 @@ class Activity2 : ComponentActivity() {
             val app = LocalContext.current.applicationContext as MyApp
             val itemVM: ItemViewModel = viewModel(factory = app.itemViewModelFactory)
             val tempVM: AttributeTemplateViewModel = viewModel(factory = app.attributeTemplateFactory)
+            val searchText = itemVM.searchQuery.collectAsState()
+            val sortOrder by itemVM.sortOrder.collectAsState()
 
             // Local
             val selectedGroup = intent.getParcelableExtra("selectedGroup", Group::class.java)
@@ -78,6 +89,7 @@ class Activity2 : ComponentActivity() {
             var itemName by remember { mutableStateOf("") }
             val attributeDrafts = remember { mutableStateListOf<AttributeTemplateDraft>() }
             val scope = rememberCoroutineScope()
+            val context = LocalContext.current
 
             // Setup
             itemVM.resetSelectedGroupId()
@@ -111,7 +123,27 @@ class Activity2 : ComponentActivity() {
                     ) {
                         // Top Bar
                         Text("Groups > ${selectedGroup?.name}")
-                        button.Generic({ showCreateScreen = true }, "Create Item")
+                        button.Generic({
+                            showCreateScreen = true
+                            itemName = "" },
+                            "Create Item")
+                        // Search Bar
+                        input.Field(searchText.value, { itemVM.setSearchQuery(it) }, "Search")
+
+                        // Sort Button
+                        button.Cycle(
+                            options = SortOrder.entries,
+                            selected = sortOrder,
+                            onOptionChange = { itemVM.setSortOrder(it) },
+                            labelMapper = { order ->
+                                when (order) {
+                                    SortOrder.NameAsc -> "Name ↑"
+                                    SortOrder.NameDesc -> "Name ↓"
+                                    SortOrder.IdAsc -> "ID ↑"
+                                    SortOrder.IdDesc -> "ID ↓"
+                                    SortOrder.Random -> "Random"
+                                } }
+                        )
 
                         Box(modifier = Modifier.fillMaxSize()) {
                             // Window to see Items
@@ -120,7 +152,14 @@ class Activity2 : ComponentActivity() {
                                     val template = templates[index]
                                     if (template != null) {
                                         Row {
-                                            button.Generic({}, template.name)
+                                            button.Generic({
+                                                val intent = Intent(context, Activity3::class.java)
+                                                intent.putExtra("selectedTemplate", template)
+                                                intent.putExtra("selectedGroup", selectedGroup)
+                                                startActivity(intent)
+                                            },
+                                                template.name,
+                                                modifier = Modifier.weight(1F))
                                             button.Icon({
                                                 itemVM.setSelectedTemplateId(template.id)
                                                 showUpdateScreen = true
@@ -132,6 +171,43 @@ class Activity2 : ComponentActivity() {
                                         }
                                     }
 
+                                }
+                                // Loading more results
+                                if (templates.loadState.append is LoadState.Loading ||
+                                    templates.loadState.refresh is LoadState.Loading
+                                ) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator()
+                                        }
+                                    }
+                                }
+                                // Failure
+                                if (templates.loadState.refresh is LoadState.Error) {
+                                    val error = (templates.loadState.refresh as LoadState.Error).error
+                                    item {
+                                        Text(
+                                            text = "Error loading results: ${error.message}",
+                                            color = Color.Red,
+                                            modifier = Modifier.padding(8.dp)
+                                        )
+                                    }
+                                }
+                                // Empty results
+                                if (templates.loadState.refresh is LoadState.NotLoading && templates.itemCount == 0) {
+                                    item {
+                                        Text(
+                                            text = "No results.",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
                                 }
                             }
 

@@ -3,6 +3,8 @@ package com.ms.im.database.entities
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
 @Entity(
     tableName = "item_table",
@@ -21,10 +23,11 @@ import androidx.room.PrimaryKey
         )
     ]
 )
+@Parcelize
 data class Item(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     val groupId: Long, // id of Group
     val name: String, // Item Name
     val isTemplate: Boolean = false,
     val templateId: Long? = null // only non-null for instances
-)
+) : Parcelable
