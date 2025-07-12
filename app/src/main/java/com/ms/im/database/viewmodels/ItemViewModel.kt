@@ -62,8 +62,7 @@ class ItemViewModel(
             }
             .cachedIn(viewModelScope)
 
-    // Setters
-
+    // ** Setters **
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -92,10 +91,15 @@ class ItemViewModel(
         _selectedGroupId.value = groupId
     }
 
-    // Get
+    // ** Get **
     suspend fun getById(id: Long): Item? = repository.getById(id)
 
-    // Insert
+    // Get all instances from a given item template
+    fun getInstancesByTemplate(templateId: Long): Flow<List<Item>> {
+        return repository.getInstancesByTemplate(templateId)
+    }
+
+    // ** Insert **
     fun insert(item: Item) = viewModelScope.launch {
         repository.insert(item)
     }
@@ -104,12 +108,12 @@ class ItemViewModel(
         return repository.insert(item)
     }
 
-    // Update
+    // ** Update **
     fun update(item: Item) = viewModelScope.launch {
         repository.update(item)
     }
 
-    // Delete
+    // ** Delete **
     fun delete(item: Item) = viewModelScope.launch {
         repository.delete(item)
     }

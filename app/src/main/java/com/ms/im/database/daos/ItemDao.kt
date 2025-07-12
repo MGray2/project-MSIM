@@ -32,7 +32,7 @@ interface ItemDao {
     suspend fun getTemplatesByGroup(groupId: Long): List<Item>
 
     @Query("SELECT * FROM item_table WHERE templateId = :templateId AND isTemplate = 0")
-    suspend fun getInstancesByTemplate(templateId: Long): List<Item>
+    fun getInstancesByTemplate(templateId: Long): Flow<List<Item>>
 
     // Search functions
     @Query("""

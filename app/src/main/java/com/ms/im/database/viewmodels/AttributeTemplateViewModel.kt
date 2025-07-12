@@ -14,8 +14,7 @@ class AttributeTemplateViewModel(
 ) : ViewModel() {
 
     // Fetch all templates for a given item
-    fun getTemplatesByItem(itemId: Long): Flow<List<AttributeTemplate>> = repository.getByItem(itemId)
-
+    fun getAllByItem(itemId: Long): Flow<List<AttributeTemplate>> = repository.getAllByItem(itemId)
 
     // Insert a single template
     fun insert(template: AttributeTemplate) = viewModelScope.launch {

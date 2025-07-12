@@ -6,6 +6,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.ms.im.database.entities.AttributeInstance
 import com.ms.im.database.repositories.AttributeInstanceRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class AttributeInstanceViewModel(
@@ -20,6 +21,11 @@ class AttributeInstanceViewModel(
     // Get one specific attribute value for a given item/template combination
     fun getAttributeValue(itemId: Long, templateId: Long): LiveData<AttributeInstance?> = liveData {
         emit(repository.getByItemAndTemplate(itemId, templateId))
+    }
+
+    // Get all attribute instances for a given item
+    fun getAllByItem(itemId: Long): Flow<List<AttributeInstance>> {
+        TODO()
     }
 
     // Insert or update a single value

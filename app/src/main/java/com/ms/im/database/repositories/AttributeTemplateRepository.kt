@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 class AttributeTemplateRepository(private val dao: AttributeTemplateDao) {
 
-    fun getByItem(itemId: Long): Flow<List<AttributeTemplate>> {
-        return dao.getTemplatesByItem(itemId)
+    fun getAllByItem(itemId: Long): Flow<List<AttributeTemplate>> {
+        return dao.getAllByItem(itemId)
     }
 
     suspend fun insert(attribute: AttributeTemplate): Long {
@@ -27,11 +27,11 @@ class AttributeTemplateRepository(private val dao: AttributeTemplateDao) {
     }
 
     suspend fun deleteAllForItem(itemId: Long) {
-        dao.deleteAllForItem(itemId)
+        dao.deleteAllByItem(itemId)
     }
 
     suspend fun replaceAttributes(itemId: Long, newAttributes: List<AttributeTemplate>) {
-        dao.deleteAllForItem(itemId)
+        dao.deleteAllByItem(itemId)
         dao.insertAll(newAttributes)
 
     }

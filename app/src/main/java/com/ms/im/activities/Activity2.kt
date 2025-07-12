@@ -76,13 +76,13 @@ class Activity2 : ComponentActivity() {
             val tempVM: AttributeTemplateViewModel = viewModel(factory = app.attributeTemplateFactory)
             val searchText = itemVM.searchQuery.collectAsState()
             val sortOrder by itemVM.sortOrder.collectAsState()
+            val selectedGroupId = itemVM.selectedGroupId
+            val selectedTemplateId = itemVM.selectedTemplateId.collectAsState()
+            val templates = itemVM.pagedTemplates.collectAsLazyPagingItems()
 
             // Local
             val selectedGroup = intent.getParcelableExtra("selectedGroup", Group::class.java)
 
-            val selectedGroupId = itemVM.selectedGroupId
-            val selectedTemplateId = itemVM.selectedTemplateId.collectAsState()
-            val templates = itemVM.pagedTemplates.collectAsLazyPagingItems()
             var showCreateScreen by remember { mutableStateOf(false) }
             var showUpdateScreen by remember { mutableStateOf(false) }
             var showDeleteScreen by remember { mutableStateOf(false) }
@@ -98,7 +98,7 @@ class Activity2 : ComponentActivity() {
             LaunchedEffect(selectedTemplateId.value) {
                 selectedTemplateId.value?.let { id ->
                     val item = itemVM.getById(id)
-                    tempVM.getTemplatesByItem(id).collect { attributes ->
+                    tempVM.getAllByItem(id).collect { attributes ->
                         if (item != null) {
                             itemName = item.name
                             attributeDrafts.clear()

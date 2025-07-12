@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 interface AttributeTemplateDao {
 
     @Query("SELECT * FROM attribute_template_table WHERE itemId = :itemId")
-    fun getTemplatesByItem(itemId: Long): Flow<List<AttributeTemplate>>
+    fun getAllByItem(itemId: Long): Flow<List<AttributeTemplate>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(attributeTemplate: AttributeTemplate): Long
@@ -28,5 +28,5 @@ interface AttributeTemplateDao {
     suspend fun delete(attributeTemplate: AttributeTemplate)
 
     @Query("DELETE FROM attribute_template_table WHERE itemId = :itemId")
-    suspend fun deleteAllForItem(itemId: Long)
+    suspend fun deleteAllByItem(itemId: Long)
 }

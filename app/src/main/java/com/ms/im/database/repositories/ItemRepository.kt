@@ -44,7 +44,7 @@ class ItemRepository(private val dao: ItemDao) {
         return dao.getTemplatesByGroup(groupId)
     }
 
-    suspend fun getInstancesByTemplate(templateId: Long): List<Item> {
+    fun getInstancesByTemplate(templateId: Long): Flow<List<Item>> {
         return dao.getInstancesByTemplate(templateId)
     }
 
