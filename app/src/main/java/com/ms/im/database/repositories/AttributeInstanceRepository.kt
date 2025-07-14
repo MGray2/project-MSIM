@@ -2,11 +2,12 @@ package com.ms.im.database.repositories
 
 import com.ms.im.database.daos.AttributeInstanceDao
 import com.ms.im.database.entities.AttributeInstance
+import kotlinx.coroutines.flow.Flow
 
 class AttributeInstanceRepository(private val dao: AttributeInstanceDao) {
 
-    suspend fun getByItem(itemId: Long): List<AttributeInstance> {
-        return dao.getInstancesForItem(itemId)
+    fun getAllByItem(itemId: Long): Flow<List<AttributeInstance>> {
+        return dao.getAllByItem(itemId)
     }
 
     suspend fun getByItemAndTemplate(itemId: Long, templateId: Long): AttributeInstance? {

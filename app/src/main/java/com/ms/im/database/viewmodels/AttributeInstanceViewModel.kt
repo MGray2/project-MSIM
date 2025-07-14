@@ -13,24 +13,21 @@ class AttributeInstanceViewModel(
     private val repository: AttributeInstanceRepository
 ) : ViewModel() {
 
-    // Get all attribute values for a given item (instance)
-    fun getAttributesByItem(itemId: Long): LiveData<List<AttributeInstance>> = liveData {
-        emit(repository.getByItem(itemId))
-    }
-
     // Get one specific attribute value for a given item/template combination
     fun getAttributeValue(itemId: Long, templateId: Long): LiveData<AttributeInstance?> = liveData {
         emit(repository.getByItemAndTemplate(itemId, templateId))
     }
 
     // Get all attribute instances for a given item
-    fun getAllByItem(itemId: Long): Flow<List<AttributeInstance>> {
-        TODO()
-    }
+    fun getAllByItem(itemId: Long): Flow<List<AttributeInstance>> = repository.getAllByItem(itemId)
 
     // Insert or update a single value
-    fun upsertAttribute(instance: AttributeInstance) = viewModelScope.launch {
+    fun insert(instance: AttributeInstance) = viewModelScope.launch {
         repository.insert(instance) // Replace strategy handles update if ID matches
+    }
+
+    fun insertAll(instances: List<AttributeInstance>) = viewModelScope.launch {
+        repository.insertAll(instances)
     }
 
     fun update(instance: AttributeInstance) = viewModelScope.launch {

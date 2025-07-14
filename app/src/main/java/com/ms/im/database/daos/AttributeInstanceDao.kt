@@ -7,11 +7,12 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.ms.im.database.entities.AttributeInstance
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AttributeInstanceDao {
     @Query("SELECT * FROM attribute_instance_table WHERE itemId = :itemId")
-    suspend fun getInstancesForItem(itemId: Long): List<AttributeInstance>
+    fun getAllByItem(itemId: Long): Flow<List<AttributeInstance>>
 
     @Query("SELECT * FROM attribute_instance_table WHERE itemId = :itemId AND templateId = :templateAttrId")
     suspend fun getValueForAttribute(itemId: Long, templateAttrId: Long): AttributeInstance?

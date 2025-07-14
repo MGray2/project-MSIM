@@ -3,6 +3,7 @@ package com.ms.im.database.entities
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import com.ms.im.AttributeType
 
 @Entity(
     tableName = "attribute_instance_table",
@@ -29,4 +30,14 @@ data class AttributeInstance(
     val valueNumber: Long? = null,
     val valueDecimal: Double? = null,
     val valueBool: Boolean? = null
-)
+) {
+    fun displayValue(type: AttributeType): String {
+        return when (type) {
+            AttributeType.TEXT -> valueText ?: "---"
+            AttributeType.TAG -> valueText ?: "---"
+            AttributeType.NUMBER -> valueNumber?.toString() ?: "---"
+            AttributeType.DECIMAL -> valueDecimal?.toString() ?: "---"
+            AttributeType.STATE -> valueBool?.toString() ?: "---"
+        }
+    }
+}
