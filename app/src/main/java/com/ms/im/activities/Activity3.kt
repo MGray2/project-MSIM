@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -46,7 +48,9 @@ import com.ms.im.ui.components.Buttons
 import com.ms.im.ui.components.Inputs
 import com.ms.im.ui.components.Screens
 import com.ms.im.ui.theme.IMTheme
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
 class Activity3 : ComponentActivity() {
@@ -71,8 +75,10 @@ class Activity3 : ComponentActivity() {
             val selectedTemplate = intent.getParcelableExtra("selectedTemplate", Item::class.java)
             val selectedGroup = intent.getParcelableExtra("selectedGroup", Group::class.java)
 
+            val selectedInstanceId = remember { mutableStateOf<Long?>(null) }
             val attributeDrafts = remember { mutableStateListOf<AttributeInstanceDraft>() }
             var showCreateScreen by remember { mutableStateOf(false) }
+            var showUpdateScreen by remember { mutableStateOf(false) }
             val scope = rememberCoroutineScope()
 
             // Setup
@@ -99,6 +105,36 @@ class Activity3 : ComponentActivity() {
                             )
                         }
                     )
+                }
+            }
+
+            LaunchedEffect(showUpdateScreen, selectedInstanceId.value) {
+                if (showUpdateScreen && selectedInstanceId.value != null) {
+                    val id = selectedInstanceId.value!!
+                    val item = itemVM.getById(id)
+                    val instances = instVM.getAllByItem(id).first()
+                    val templates = selectedTemplate
+                        ?.let { tempVM.getAllByItem(it.id).first() }
+                        ?: emptyList()
+                    if (item != null && instances.isNotEmpty()) {
+                        attributeDrafts.clear()
+
+                        attributeDrafts.addAll(
+                            instances.mapNotNull { instance ->
+                                val type = templates.find { it.id == instance.templateId }?.type
+                                if (type != null) {
+                                    AttributeInstanceDraft(
+                                        templateId = instance.templateId,
+                                        type = type,
+                                        valueText = instance.valueText ?: "",
+                                        valueNumber = instance.valueNumber ?: 0L,
+                                        valueDecimal = instance.valueDecimal ?: 0.0,
+                                        valueBool = instance.valueBool ?: false
+                                    )
+                                } else null // skip if template not found
+                            }
+                        )
+                    }
                 }
             }
 
@@ -138,6 +174,10 @@ class Activity3 : ComponentActivity() {
                                             Text(value, modifier = Modifier.weight(1f))
                                         }
                                     }
+                                    button.Icon({
+                                        selectedInstanceId.value = item.id
+                                        showUpdateScreen = true
+                                    }, Icons.Filled.Edit)
                                 }
                             }
 
@@ -180,6 +220,37 @@ class Activity3 : ComponentActivity() {
                                 attributeTemplates = attributeTemplates,
                                 attributeDrafts = attributeDrafts
                             )
+
+                            // Update Instance Screen
+                            AttributeUpdateScreen(
+                                visible = showUpdateScreen,
+                                onDismiss = { showUpdateScreen = false },
+                                onSubmit = { itemId, drafts ->
+                                    itemId?.let { id ->
+                                        scope.launch {
+
+                                            val newAttributes = drafts.map { draft ->
+                                                AttributeInstance(
+                                                    itemId = id,
+                                                    templateId = draft.templateId,
+                                                    valueText = if (draft.type == AttributeType.TEXT || draft.type == AttributeType.TAG) draft.valueText else null,
+                                                    valueNumber = if (draft.type == AttributeType.NUMBER) draft.valueNumber else null,
+                                                    valueDecimal = if (draft.type == AttributeType.DECIMAL) draft.valueDecimal else null,
+                                                    valueBool = if (draft.type == AttributeType.STATE) draft.valueBool else null
+                                                )
+                                            }
+
+                                            instVM.replaceAttributes(id, newAttributes)
+                                            // Clear
+                                            showUpdateScreen = false
+                                            attributeDrafts.clear()
+                                        }
+                                    }
+                                },
+                                itemId = selectedInstanceId.value,
+                                attributeTemplates = attributeTemplates,
+                                attributeDrafts = attributeDrafts
+                            )
                         }
                     }
                 }
@@ -218,6 +289,33 @@ class Activity3 : ComponentActivity() {
     }
 
     @Composable
+    fun AttributeUpdateScreen(
+        visible: Boolean,
+        onDismiss: () -> Unit,
+        onSubmit: (Long?, List<AttributeInstanceDraft>) -> Unit,
+        itemId: Long?,
+        attributeTemplates: List<AttributeTemplate>,
+        attributeDrafts: SnapshotStateList<AttributeInstanceDraft>
+    ) {
+        screen.MiniScreen(
+            visible = visible,
+            onDismiss = onDismiss,
+            title = "Edit Instance",
+            content = {
+                if (itemId == null) return@MiniScreen
+                attributeTemplates.zip(attributeDrafts).forEach { (template, draft) ->
+                    AttributeInstanceField(
+                        draft = draft,
+                        template = template
+                    )
+                }
+            },
+            confirmButton = { button.Generic({ onSubmit(itemId, attributeDrafts) }, "Save") },
+            cancelButton = { button.Generic(onDismiss, "Cancel") }
+        )
+    }
+
+    @Composable
     fun AttributeInstanceField(
         draft: AttributeInstanceDraft,
         template: AttributeTemplate
@@ -234,8 +332,9 @@ class Activity3 : ComponentActivity() {
                     )
                 }
                 AttributeType.NUMBER -> {
+                    val textValue = if (draft.valueNumber == 0L) "" else draft.valueNumber.toString()
                     input.Field(
-                        value = draft.valueNumber.toString(),
+                        value = textValue,
                         onValueChange = {
                             draft.valueNumber = it.toLongOrNull()?: 0L
                         },
@@ -243,8 +342,9 @@ class Activity3 : ComponentActivity() {
                     )
                 }
                 AttributeType.DECIMAL -> {
+                    val textValue = if (draft.valueDecimal == 0.0) "" else draft.valueDecimal.toString()
                     input.Field(
-                        value = draft.valueDecimal.toString(),
+                        value = textValue,
                         onValueChange = {
                             draft.valueDecimal = it.toDoubleOrNull()?: 0.0
                         },

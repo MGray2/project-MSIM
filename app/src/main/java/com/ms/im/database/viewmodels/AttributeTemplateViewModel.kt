@@ -33,7 +33,7 @@ class AttributeTemplateViewModel(
 
     fun replaceAttributes(itemId: Long, newAttributes: List<AttributeTemplate>) = viewModelScope.launch {
             repository.replaceAttributes(itemId, newAttributes)
-        }
+    }
 
 
     // Delete a template

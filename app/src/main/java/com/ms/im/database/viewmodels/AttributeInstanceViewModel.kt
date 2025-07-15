@@ -34,6 +34,10 @@ class AttributeInstanceViewModel(
         repository.update(instance)
     }
 
+    fun replaceAttributes(itemId: Long, newAttributes: List<AttributeInstance>) = viewModelScope.launch {
+        repository.replaceAttributes(itemId, newAttributes)
+    }
+
     fun delete(instance: AttributeInstance) = viewModelScope.launch {
         repository.delete(instance)
     }
