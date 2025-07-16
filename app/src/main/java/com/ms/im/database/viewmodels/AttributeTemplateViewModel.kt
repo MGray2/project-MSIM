@@ -1,16 +1,16 @@
 package com.ms.im.database.viewmodels
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.ms.im.database.entities.AttributeTemplate
+import com.ms.im.database.manager.AttributeManager
 import com.ms.im.database.repositories.AttributeTemplateRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class AttributeTemplateViewModel(
-    private val repository: AttributeTemplateRepository
+    private val repository: AttributeTemplateRepository,
+    private val attributeManager: AttributeManager
 ) : ViewModel() {
 
     // Fetch all templates for a given item
@@ -39,6 +39,12 @@ class AttributeTemplateViewModel(
     // Use within coroutine scope
     suspend fun replaceAttributesNow(itemId: Long, newAttributes: List<AttributeTemplate>) {
         repository.replaceAttributes(itemId, newAttributes)
+    }
+
+    fun updateTemplatesAndBackFill(itemId: Long, newTemplates: List<AttributeTemplate>) {
+        viewModelScope.launch {
+            attributeManager.updateTemplatesAndBackFillInstances(itemId, newTemplates)
+        }
     }
 
     // Delete a template

@@ -267,7 +267,7 @@ class Activity2 : ComponentActivity() {
                                             )
                                         }
 
-                                        instVM.updateTemplateAndBackFill(item.id, newAttributes)
+                                        tempVM.updateTemplatesAndBackFill(item.id, newAttributes)
                                         // Reset
                                         showUpdateScreen = false
                                         itemName = ""

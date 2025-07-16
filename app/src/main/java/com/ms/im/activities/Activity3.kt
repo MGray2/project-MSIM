@@ -97,7 +97,7 @@ class Activity3 : ComponentActivity() {
                 if (selectedTemplate != null) {
                     val templateId = selectedTemplate.id
                     val attributes = tempVM.getAllByItem(templateId).first()
-                    instVM.updateTemplateAndBackFill(templateId, attributes)
+                    tempVM.updateTemplatesAndBackFill(templateId, attributes)
                 }
             }
 

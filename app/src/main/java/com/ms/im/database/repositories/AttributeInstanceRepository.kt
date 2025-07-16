@@ -10,10 +10,6 @@ class AttributeInstanceRepository(private val dao: AttributeInstanceDao) {
         return dao.getAllByItem(itemId)
     }
 
-    suspend fun getByItemAndTemplate(itemId: Long, templateId: Long): AttributeInstance? {
-        return dao.getValueForAttribute(itemId, templateId)
-    }
-
     suspend fun insert(instance: AttributeInstance): Long {
         return dao.insert(instance)
     }
