@@ -50,7 +50,6 @@ import com.ms.im.ui.components.Screens
 import com.ms.im.ui.theme.IMTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
 class Activity3 : ComponentActivity() {
@@ -93,6 +92,14 @@ class Activity3 : ComponentActivity() {
                     itemVM.getInstancesByTemplate(it.id)
                 } ?: flowOf(emptyList())
             }.collectAsState(initial = emptyList())
+
+            LaunchedEffect(selectedTemplate?.id) {
+                if (selectedTemplate != null) {
+                    val templateId = selectedTemplate.id
+                    val attributes = tempVM.getAllByItem(templateId).first()
+                    instVM.updateTemplateAndBackFill(templateId, attributes)
+                }
+            }
 
             LaunchedEffect(showCreateScreen) {
                 if (showCreateScreen && attributeDrafts.isEmpty()) {

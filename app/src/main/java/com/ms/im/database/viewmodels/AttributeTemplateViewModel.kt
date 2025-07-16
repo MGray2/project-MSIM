@@ -31,10 +31,15 @@ class AttributeTemplateViewModel(
         repository.update(template)
     }
 
+    // Coroutine independent
     fun replaceAttributes(itemId: Long, newAttributes: List<AttributeTemplate>) = viewModelScope.launch {
-            repository.replaceAttributes(itemId, newAttributes)
+        repository.replaceAttributes(itemId, newAttributes)
     }
 
+    // Use within coroutine scope
+    suspend fun replaceAttributesNow(itemId: Long, newAttributes: List<AttributeTemplate>) {
+        repository.replaceAttributes(itemId, newAttributes)
+    }
 
     // Delete a template
     fun delete(template: AttributeTemplate) = viewModelScope.launch {

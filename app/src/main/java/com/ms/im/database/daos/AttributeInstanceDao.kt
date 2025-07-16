@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.ms.im.database.entities.AttributeInstance
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +14,9 @@ import kotlinx.coroutines.flow.Flow
 interface AttributeInstanceDao {
     @Query("SELECT * FROM attribute_instance_table WHERE itemId = :itemId")
     fun getAllByItem(itemId: Long): Flow<List<AttributeInstance>>
+
+    @Query("SELECT * FROM attribute_instance_table WHERE itemId = :itemId")
+    suspend fun getAllByItemNow(itemId: Long): List<AttributeInstance>
 
     @Query("SELECT * FROM attribute_instance_table WHERE itemId = :itemId AND templateId = :templateAttrId")
     suspend fun getValueForAttribute(itemId: Long, templateAttrId: Long): AttributeInstance?
@@ -30,5 +34,11 @@ interface AttributeInstanceDao {
     suspend fun delete(attributeInstance: AttributeInstance)
 
     @Query("DELETE FROM attribute_instance_table WHERE itemId = :itemId")
-    suspend fun deleteAllForItem(itemId: Long)
+    suspend fun deleteAllByItem(itemId: Long)
+
+    @Transaction
+    suspend fun replaceAttributes(itemId: Long, newAttributes: List<AttributeInstance>) {
+        deleteAllByItem(itemId)
+        insertAll(newAttributes)
+    }
 }

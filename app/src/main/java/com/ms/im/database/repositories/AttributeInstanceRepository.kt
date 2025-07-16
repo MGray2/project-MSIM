@@ -27,15 +27,14 @@ class AttributeInstanceRepository(private val dao: AttributeInstanceDao) {
     }
 
     suspend fun replaceAttributes(itemId: Long, newAttributes: List<AttributeInstance>) {
-        dao.deleteAllForItem(itemId)
-        dao.insertAll(newAttributes)
+        dao.replaceAttributes(itemId, newAttributes)
     }
 
     suspend fun delete(instance: AttributeInstance) {
         dao.delete(instance)
     }
 
-    suspend fun deleteAllForItem(itemId: Long) {
-        dao.deleteAllForItem(itemId)
+    suspend fun deleteAllByItem(itemId: Long) {
+        dao.deleteAllByItem(itemId)
     }
 }

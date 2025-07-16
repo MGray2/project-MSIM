@@ -1,21 +1,57 @@
 package com.ms.im.database.viewmodels
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.ms.im.database.entities.AttributeInstance
+import com.ms.im.database.entities.AttributeTemplate
 import com.ms.im.database.repositories.AttributeInstanceRepository
+import com.ms.im.database.repositories.AttributeTemplateRepository
+import com.ms.im.database.repositories.ItemRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class AttributeInstanceViewModel(
-    private val repository: AttributeInstanceRepository
+    private val repository: AttributeInstanceRepository,
+    private val itemRepository: ItemRepository,
+    private val templateRepository: AttributeTemplateRepository
 ) : ViewModel() {
 
-    // Get one specific attribute value for a given item/template combination
-    fun getAttributeValue(itemId: Long, templateId: Long): LiveData<AttributeInstance?> = liveData {
-        emit(repository.getByItemAndTemplate(itemId, templateId))
+    suspend fun backFillAllInstancesByTemplate(
+        templateId: Long,
+        templateAttributes: List<AttributeTemplate>
+    ) {
+        val instances = itemRepository.getInstancesByTemplate(templateId).first()
+
+        for (item in instances) {
+            val existingInstances = repository.getAllByItem(item.id).first()
+            val existingTemplateIds = existingInstances.map { it.templateId }.toSet()
+
+            val missingTemplates = templateAttributes.filter { it.id !in existingTemplateIds }
+
+            val newInstances = missingTemplates.map { template ->
+                AttributeInstance(
+                    itemId = item.id,
+                    templateId = template.id,
+                    valueText = null,
+                    valueNumber = null,
+                    valueDecimal = null,
+                    valueBool = null
+                )
+            }
+
+            repository.insertAll(newInstances)
+        }
+    }
+
+    fun updateTemplateAndBackFill(itemId: Long, newTemplates: List<AttributeTemplate>) = viewModelScope.launch {
+        val instanceItems = itemRepository.getInstancesByTemplate(itemId).first()
+
+        templateRepository.updateTemplatesAndBackFillInstances(
+            itemId = itemId,
+            newTemplates = newTemplates,
+            instanceItems = instanceItems
+        )
     }
 
     // Get all attribute instances for a given item
@@ -34,7 +70,13 @@ class AttributeInstanceViewModel(
         repository.update(instance)
     }
 
+    // Coroutine independent
     fun replaceAttributes(itemId: Long, newAttributes: List<AttributeInstance>) = viewModelScope.launch {
+        repository.replaceAttributes(itemId, newAttributes)
+    }
+
+    // Use within coroutine scope
+    suspend fun replaceAttributesNow(itemId: Long, newAttributes: List<AttributeInstance>) {
         repository.replaceAttributes(itemId, newAttributes)
     }
 
@@ -42,7 +84,7 @@ class AttributeInstanceViewModel(
         repository.delete(instance)
     }
 
-    fun deleteAllForItem(itemId: Long) = viewModelScope.launch {
-        repository.deleteAllForItem(itemId)
+    fun deleteAllByItem(itemId: Long) = viewModelScope.launch {
+        repository.deleteAllByItem(itemId)
     }
 }

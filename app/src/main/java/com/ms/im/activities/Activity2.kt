@@ -48,6 +48,7 @@ import com.ms.im.SortOrder
 import com.ms.im.database.entities.AttributeTemplate
 import com.ms.im.database.entities.Group
 import com.ms.im.database.entities.Item
+import com.ms.im.database.viewmodels.AttributeInstanceViewModel
 import com.ms.im.database.viewmodels.AttributeTemplateViewModel
 import com.ms.im.database.viewmodels.ItemViewModel
 import com.ms.im.ui.components.Buttons
@@ -74,6 +75,7 @@ class Activity2 : ComponentActivity() {
             val app = LocalContext.current.applicationContext as MyApp
             val itemVM: ItemViewModel = viewModel(factory = app.itemViewModelFactory)
             val tempVM: AttributeTemplateViewModel = viewModel(factory = app.attributeTemplateFactory)
+            val instVM: AttributeInstanceViewModel = viewModel(factory = app.attributeInstanceFactory)
             val searchText = itemVM.searchQuery.collectAsState()
             val sortOrder by itemVM.sortOrder.collectAsState()
             val selectedGroupId = itemVM.selectedGroupId
@@ -264,7 +266,8 @@ class Activity2 : ComponentActivity() {
                                                 itemId = item.id
                                             )
                                         }
-                                        tempVM.replaceAttributes(item.id, newAttributes)
+
+                                        instVM.updateTemplateAndBackFill(item.id, newAttributes)
                                         // Reset
                                         showUpdateScreen = false
                                         itemName = ""
