@@ -22,8 +22,16 @@ class AttributeTemplateRepository(private val dao: AttributeTemplateDao) {
         dao.update(attribute)
     }
 
+    suspend fun updateAll(attributes: List<AttributeTemplate>) {
+        dao.updateAll(attributes)
+    }
+
     suspend fun delete(attribute: AttributeTemplate) {
         dao.delete(attribute)
+    }
+
+    suspend fun deleteAll(attributes: List<AttributeTemplate>) {
+        dao.deleteAll(attributes)
     }
 
     suspend fun deleteAllForItem(itemId: Long) {

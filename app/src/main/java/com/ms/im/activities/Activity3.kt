@@ -93,14 +93,6 @@ class Activity3 : ComponentActivity() {
                 } ?: flowOf(emptyList())
             }.collectAsState(initial = emptyList())
 
-            LaunchedEffect(selectedTemplate?.id) {
-                if (selectedTemplate != null) {
-                    val templateId = selectedTemplate.id
-                    val attributes = tempVM.getAllByItem(templateId).first()
-                    tempVM.updateTemplatesAndBackFill(templateId, attributes)
-                }
-            }
-
             LaunchedEffect(showCreateScreen) {
                 if (showCreateScreen && attributeDrafts.isEmpty()) {
                     attributeDrafts.clear()

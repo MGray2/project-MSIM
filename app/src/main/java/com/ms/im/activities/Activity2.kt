@@ -108,7 +108,8 @@ class Activity2 : ComponentActivity() {
                                 attributes.map {
                                     AttributeTemplateDraft(
                                         name = it.name,
-                                        type = it.type
+                                        type = it.type,
+                                        stableId = it.stableId
                                     )
                                 }
                             )
@@ -227,11 +228,13 @@ class Activity2 : ComponentActivity() {
                                                     groupId = id
                                                 )
                                             )
-                                            val attributes = drafts.map { draft ->
+                                            val attributes = drafts.mapIndexed { index, draft ->
                                                 AttributeTemplate(
                                                     name = draft.name,
                                                     type = draft.type,
-                                                    itemId = itemId
+                                                    stableId = draft.stableId,
+                                                    itemId = itemId,
+                                                    position = index
                                                 )
                                             }
                                             tempVM.insertAll(attributes)
@@ -259,11 +262,13 @@ class Activity2 : ComponentActivity() {
                                         val item = itemVM.getById(templateId) ?: return@launch
                                         itemVM.update(item.copy(name = itemName))
 
-                                        val newAttributes = drafts.map { draft ->
+                                        val newAttributes = drafts.mapIndexed { index, draft ->
                                             AttributeTemplate(
                                                 name = draft.name,
                                                 type = draft.type,
-                                                itemId = item.id
+                                                itemId = item.id,
+                                                stableId = draft.stableId,
+                                                position = index
                                             )
                                         }
 

@@ -28,8 +28,14 @@ interface AttributeTemplateDao {
     @Update
     suspend fun update(attributeTemplate: AttributeTemplate)
 
+    @Update
+    suspend fun updateAll(attributes: List<AttributeTemplate>)
+
     @Delete
     suspend fun delete(attributeTemplate: AttributeTemplate)
+
+    @Delete
+    suspend fun deleteAll(attributes: List<AttributeTemplate>)
 
     @Query("DELETE FROM attribute_template_table WHERE itemId = :itemId")
     suspend fun deleteAllByItem(itemId: Long)

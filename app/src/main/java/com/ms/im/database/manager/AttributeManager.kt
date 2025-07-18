@@ -1,5 +1,6 @@
 package com.ms.im.database.manager
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import androidx.room.withTransaction
 import com.ms.im.database.AppDatabase
@@ -9,7 +10,6 @@ import com.ms.im.database.repositories.AttributeInstanceRepository
 import com.ms.im.database.repositories.AttributeTemplateRepository
 import com.ms.im.database.repositories.ItemRepository
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 
 class AttributeManager(
     private val templateRepository: AttributeTemplateRepository,
@@ -18,37 +18,59 @@ class AttributeManager(
     private val database: AppDatabase
 ) {
 
-    // Operation to replace templates and instances, then auto-populate with old information
     suspend fun updateTemplatesAndBackFillInstances(itemId: Long, newTemplates: List<AttributeTemplate>) {
         database.withTransaction {
-            // 1. Replace templates
-            templateRepository.replaceAttributes(itemId, newTemplates)
+            // normalize and assign positions
+            val normalizedNewTemplates = newTemplates
+                .sortedBy { it.position }
+                .mapIndexed { index, attr -> attr.copy(position = index, itemId = itemId) }
 
-            // 2. Fetch updated templates to get their IDs (if needed)
+            // get existing templates before deletion
+            val oldTemplates = templateRepository.getAllByItem(itemId).first()
+
+            // get all existing instance values by (itemId + template.stableId)
+            val instancesByItem = mutableMapOf<Long, Map<String, AttributeInstance>>()
+            val items = itemRepository.getInstancesByTemplate(itemId).first()
+
+            for (item in items) {
+                val instances = instanceRepository.getAllByItem(item.id).first()
+                val instanceMap = mutableMapOf<String, AttributeInstance>()
+
+                for (instance in instances) {
+                    val oldTemplate = oldTemplates.find { it.id == instance.templateId }
+                    if (oldTemplate != null) {
+                        instanceMap[oldTemplate.stableId] = instance
+                    }
+                }
+
+                instancesByItem[item.id] = instanceMap
+            }
+
+            // replace templates
+            templateRepository.replaceAttributes(itemId, normalizedNewTemplates)
+
+            // re-obtain templates with new IDs
             val updatedTemplates = templateRepository.getAllByItem(itemId).first()
+            val templateMap = updatedTemplates.associateBy { it.stableId }
 
-            // 3. Get all instances for this item/template
-            val instances = itemRepository.getInstancesByTemplate(itemId).first()
+            // for each item instance, insert new AttributeInstances
+            for (item in items) {
+                val oldInstanceMap = instancesByItem[item.id] ?: emptyMap()
 
-            // 4. For each instance, back-fill missing attribute instances
-            instances.forEach { instance ->
-                val existingInstances = instanceRepository.getAllByItem(instance.id).first()
-                val existingTemplateIds = existingInstances.map { it.templateId }.toSet()
-
-                val missingTemplates = updatedTemplates.filter { it.id !in existingTemplateIds }
-
-                val newAttributeInstances = missingTemplates.map { template ->
+                val newInstances = templateMap.mapNotNull { (stableId, newTemplate) ->
+                    val oldInstance = oldInstanceMap[stableId]
                     AttributeInstance(
-                        itemId = instance.id,
-                        templateId = template.id,
-                        valueText = null,
-                        valueNumber = null,
-                        valueDecimal = null,
-                        valueBool = null
+                        itemId = item.id,
+                        templateId = newTemplate.id,
+                        valueText = oldInstance?.valueText,
+                        valueNumber = oldInstance?.valueNumber,
+                        valueDecimal = oldInstance?.valueDecimal,
+                        valueBool = oldInstance?.valueBool
                     )
                 }
 
-                instanceRepository.insertAll(newAttributeInstances)
+                instanceRepository.deleteAllByItem(item.id)
+                instanceRepository.insertAll(newInstances)
             }
         }
     }
