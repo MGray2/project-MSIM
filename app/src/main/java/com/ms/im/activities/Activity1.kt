@@ -94,6 +94,8 @@ class Activity1 : ComponentActivity() {
                     ) {
                         // Top Bar
                         Text("Groups")
+
+                        // Row of buttons for Create/Update/Delete
                         Row(modifier = Modifier
                             .fillMaxWidth()
                         ) {
@@ -102,6 +104,7 @@ class Activity1 : ComponentActivity() {
                                 newGroupName = ""
                                 showCreateScreen = true },
                                 "Create")
+
                             // Update Button
                             button.Generic({
                                 groupId?.let { id ->
@@ -112,6 +115,7 @@ class Activity1 : ComponentActivity() {
                                     }
                                 }
                             }, placeholder = "Edit", enabled = enableUpdate)
+
                             // Delete Button
                             button.Generic({
                                 groupId?.let { id ->
@@ -123,6 +127,7 @@ class Activity1 : ComponentActivity() {
                                 }
                             }, placeholder = "Delete", enabled = enableDelete)
                         }
+
                         // Search Bar
                         input.Field(searchText.value, { groupVM.setSearchQuery(it) }, "Search")
 
@@ -152,6 +157,8 @@ class Activity1 : ComponentActivity() {
                                             ItemButton(
                                                 onClick = { // Single click to select Group
                                                     groupVM.selectGroup(group.id)
+                                                    // click again to unselect
+                                                    if (groupId == group.id) groupVM.resetSelectedGroup()
                                                 },
                                                 onDoubleClick = { // Double click to go to Activity 2
                                                     val intent = Intent(context, Activity2::class.java)
@@ -252,7 +259,7 @@ class Activity1 : ComponentActivity() {
     }
 
     @Composable
-    fun ItemButton(
+    private fun ItemButton(
         onClick: () -> Unit,
         onDoubleClick: () -> Unit,
         placeholder: String
@@ -268,7 +275,7 @@ class Activity1 : ComponentActivity() {
     }
 
     @Composable
-    fun CreateGroupScreen(
+    private fun CreateGroupScreen(
         visible: Boolean,
         onDismiss: () -> Unit,
         onSubmit: () -> Unit,
@@ -288,14 +295,14 @@ class Activity1 : ComponentActivity() {
     }
 
     @Composable
-    fun UpdateGroupScreen(
+    private fun UpdateGroupScreen(
         visible: Boolean,
         onDismiss: () -> Unit,
         onSubmit: () -> Unit,
         groupName: String,
         onGroupNameChange: (String) -> Unit
     ) {
-        // Pop-up window form to create a Group
+        // Pop-up window form to change a Group
         screen.MiniScreen(
             visible = visible,
             onDismiss = onDismiss,
@@ -308,13 +315,13 @@ class Activity1 : ComponentActivity() {
     }
 
     @Composable
-    fun DeleteGroupScreen(
+    private fun DeleteGroupScreen(
         visible: Boolean,
         onDismiss: () -> Unit,
         onSubmit: () -> Unit,
         groupName: String,
     ) {
-        // Pop-up window form to create a Group
+        // Pop-up window form to delete a Group
         screen.MiniScreen(
             visible = visible,
             onDismiss = onDismiss,
