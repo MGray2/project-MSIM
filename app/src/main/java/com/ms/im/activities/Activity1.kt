@@ -20,11 +20,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +43,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.ms.im.SortOrder
+import kotlinx.coroutines.launch
 
 // Groups Screen
 class Activity1 : ComponentActivity() {
@@ -57,7 +60,7 @@ class Activity1 : ComponentActivity() {
             val app = LocalContext.current.applicationContext as MyApp
             val groupVM: GroupViewModel = viewModel(factory = app.groupViewModelFactory)
             val groups = groupVM.pagedGroups.collectAsLazyPagingItems()
-            val groupId = groupVM.selectedGroupId.collectAsState()
+            val groupId by groupVM.selectedGroupId.collectAsState()
             val searchText = groupVM.searchQuery.collectAsState()
             val sortOrder by groupVM.sortOrder.collectAsState()
 
@@ -66,7 +69,22 @@ class Activity1 : ComponentActivity() {
             var showCreateScreen by remember { mutableStateOf(false) }
             var showUpdateScreen by remember { mutableStateOf(false) }
             var showDeleteScreen by remember { mutableStateOf(false) }
+            var enableUpdate by remember { mutableStateOf(false) }
+            var enableDelete by remember { mutableStateOf(false) }
             var newGroupName by remember { mutableStateOf("")}
+            val scope = rememberCoroutineScope()
+
+
+            // Setup
+            LaunchedEffect(groupId) {
+                if (groupId != null) {
+                    enableUpdate = true
+                    enableDelete = true
+                } else {
+                    enableUpdate = false
+                    enableDelete = false
+                }
+            }
 
             IMTheme {
                 Scaffold { padding ->
@@ -76,10 +94,35 @@ class Activity1 : ComponentActivity() {
                     ) {
                         // Top Bar
                         Text("Groups")
-                        button.Generic({
-                            newGroupName = ""
-                            showCreateScreen = true },
-                            "Create Group")
+                        Row(modifier = Modifier
+                            .fillMaxWidth()
+                        ) {
+                            // Create Button
+                            button.Generic({
+                                newGroupName = ""
+                                showCreateScreen = true },
+                                "Create")
+                            // Update Button
+                            button.Generic({
+                                groupId?.let { id ->
+                                    scope.launch {
+                                        val groupName = groupVM.getById(id)?.name ?: return@launch
+                                        newGroupName = groupName
+                                        showUpdateScreen = true
+                                    }
+                                }
+                            }, placeholder = "Edit", enabled = enableUpdate)
+                            // Delete Button
+                            button.Generic({
+                                groupId?.let { id ->
+                                    scope.launch {
+                                        val groupName = groupVM.getById(id)?.name ?: return@launch
+                                        newGroupName = groupName
+                                        showDeleteScreen = true
+                                    }
+                                }
+                            }, placeholder = "Delete", enabled = enableDelete)
+                        }
                         // Search Bar
                         input.Field(searchText.value, { groupVM.setSearchQuery(it) }, "Search")
 
@@ -98,27 +141,25 @@ class Activity1 : ComponentActivity() {
                                 } }
                         )
                         Box(modifier = Modifier.fillMaxSize()) {
+
                             // Window to see groups
                             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                                 items(groups.itemCount) { index ->
                                     val group = groups[index]
                                     if (group != null) {
                                         Row(modifier = Modifier.fillMaxWidth()) {
-                                            button.Generic({
-                                                val intent = Intent(context, Activity2::class.java)
-                                                intent.putExtra("selectedGroup", group)
-                                                context.startActivity(intent)
-                                            }, group.name, modifier = Modifier.weight(1F))
-                                            button.Icon({
-                                                newGroupName = group.name
-                                                showUpdateScreen = true
-                                                groupVM.selectGroup(group.id) },
-                                                Icons.Filled.Edit)
-                                            button.Icon({
-                                                newGroupName = group.name
-                                                showDeleteScreen = true
-                                                groupVM.selectGroup(group.id) },
-                                                Icons.Filled.Delete)
+                                            // Interactable Button for each Group iterable
+                                            ItemButton(
+                                                onClick = { // Single click to select Group
+                                                    groupVM.selectGroup(group.id)
+                                                },
+                                                onDoubleClick = { // Double click to go to Activity 2
+                                                    val intent = Intent(context, Activity2::class.java)
+                                                    intent.putExtra("selectedGroup", group)
+                                                    context.startActivity(intent)
+                                                },
+                                                group.name
+                                            )
                                         }
                                     }
                                 }
@@ -178,7 +219,7 @@ class Activity1 : ComponentActivity() {
                                 visible = showUpdateScreen,
                                 onDismiss = { showUpdateScreen = false },
                                 onSubmit = {
-                                    groupId.value?.let { id ->
+                                    groupId?.let { id ->
                                         groupVM.updateById(id, newGroupName)
                                         groupVM.resetSelectedGroup()
                                     }
@@ -194,7 +235,7 @@ class Activity1 : ComponentActivity() {
                                 visible = showDeleteScreen,
                                 onDismiss = { showDeleteScreen = false },
                                 onSubmit = {
-                                    groupId.value?.let { id ->
+                                    groupId?.let { id ->
                                         groupVM.deleteById(id)
                                         groupVM.resetSelectedGroup()
                                     }
@@ -208,6 +249,22 @@ class Activity1 : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @Composable
+    fun ItemButton(
+        onClick: () -> Unit,
+        onDoubleClick: () -> Unit,
+        placeholder: String
+    ) {
+        button.ItemInteractable(
+            modifier = Modifier,
+            onClick = onClick,
+            onDoubleClick = onDoubleClick,
+            content = {
+                Text(placeholder)
+            }
+        )
     }
 
     @Composable
