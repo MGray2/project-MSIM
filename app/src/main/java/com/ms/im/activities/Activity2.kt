@@ -146,7 +146,7 @@ class Activity2 : ComponentActivity() {
                             // Update Button
                             button.Generic({
                                 showUpdateScreen = true
-                            }, placeholder = "Update", enabled = enableUpdate)
+                            }, placeholder = "Edit", enabled = enableUpdate)
 
                             // Delete Button
                             button.Generic({
