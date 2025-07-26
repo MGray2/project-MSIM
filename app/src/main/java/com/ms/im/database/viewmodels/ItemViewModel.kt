@@ -54,14 +54,15 @@ class ItemViewModel(
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     val pagedTemplates: Flow<PagingData<Item>> =
-        combine(_searchQuery, _sortOrder, _selectedGroupId) { query, groupId, sort ->
-            Triple(query, groupId, sort)
+        combine(searchQuery, sortOrder, selectedGroupId, randomSeed) { query, order, groupId, seed ->
+            TemplateQueryParams(query, order, groupId, seed)
     }
             .debounce(300)
             .distinctUntilChanged()
-            .flatMapLatest { (query, sort, groupId) ->
+            .flatMapLatest { params ->
+                val (query, order, groupId, seed) = params
                 if (groupId != null) {
-                    repository.getPagedTemplatesFilteredSorted(query, groupId, sort)
+                    repository.getPagedTemplatesFilteredSorted(query, groupId, order, seed)
                 } else {
                     emptyFlow()
                 }
@@ -71,6 +72,10 @@ class ItemViewModel(
     // ** Setters **
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun setSortOrder(order: SortOrder) {
+        _sortOrder.value = order
     }
 
     fun setSortField(field: SortField) {
@@ -145,6 +150,13 @@ class ItemViewModel(
             if (target != null) repository.delete(target)
         }
     }
+
+    private data class TemplateQueryParams(
+        val query: String,
+        val sortOrder: SortOrder,
+        val groupId: Long?,
+        val seed: Int
+    )
 
     init {
         viewModelScope.launch {

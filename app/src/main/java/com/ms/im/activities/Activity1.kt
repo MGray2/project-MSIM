@@ -204,7 +204,7 @@ class Activity1 : ComponentActivity() {
                                     }
                                 }
                             }
-                            // Sort Mini-screen
+                            // Sort Group Screen
                             SortMenu(
                                 visible = showSortScreen,
                                 onDismiss = { showSortScreen = false },
@@ -217,7 +217,7 @@ class Activity1 : ComponentActivity() {
                                 }
                             )
 
-                            // Create Group Mini-screen
+                            // Create Group Screen
                             CreateGroupScreen(
                                 visible = showCreateScreen,
                                 onDismiss = { showCreateScreen = false },
@@ -230,7 +230,7 @@ class Activity1 : ComponentActivity() {
                                 onGroupNameChange = { newGroupName = it }
                             )
 
-                            // Update Group Mini-screen
+                            // Update Group Screen
                             UpdateGroupScreen(
                                 visible = showUpdateScreen,
                                 onDismiss = { showUpdateScreen = false },
@@ -246,7 +246,7 @@ class Activity1 : ComponentActivity() {
                                 onGroupNameChange = { newGroupName = it }
                             )
 
-                            // Delete Group Mini-screen
+                            // Delete Group Screen
                             DeleteGroupScreen(
                                 visible = showDeleteScreen,
                                 onDismiss = { showDeleteScreen = false },

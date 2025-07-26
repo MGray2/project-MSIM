@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,6 +44,8 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.ms.im.AttributeTemplateDraft
 import com.ms.im.AttributeType
 import com.ms.im.MyApp
+import com.ms.im.OrderDirection
+import com.ms.im.SortField
 import com.ms.im.SortOrder
 import com.ms.im.database.entities.AttributeTemplate
 import com.ms.im.database.entities.Group
@@ -84,6 +87,7 @@ class Activity2 : ComponentActivity() {
             var showCreateScreen by remember { mutableStateOf(false) }
             var showUpdateScreen by remember { mutableStateOf(false) }
             var showDeleteScreen by remember { mutableStateOf(false) }
+            var showSortScreen by remember { mutableStateOf(false) }
             var enableUpdate by remember { mutableStateOf(false) }
             var enableDelete by remember { mutableStateOf(false) }
             var itemName by remember { mutableStateOf("") }
@@ -158,19 +162,7 @@ class Activity2 : ComponentActivity() {
                         input.Field(searchText.value, { itemVM.setSearchQuery(it) }, "Search")
 
                         // Sort Button
-//                        button.Cycle(
-//                            options = SortOrder.entries,
-//                            selected = sortOrder,
-//                            onOptionChange = { itemVM.setSortOrder(it) },
-//                            labelMapper = { order ->
-//                                when (order) {
-//                                    SortOrder.NameAsc -> "Name ↑"
-//                                    SortOrder.NameDesc -> "Name ↓"
-//                                    SortOrder.IdAsc -> "ID ↑"
-//                                    SortOrder.IdDesc -> "ID ↓"
-//                                    SortOrder.Random -> "Random"
-//                                } }
-//                        )
+                        button.Generic({ showSortScreen = true }, "Sort")
 
                         Box(modifier = Modifier.fillMaxSize()) {
 
@@ -233,6 +225,19 @@ class Activity2 : ComponentActivity() {
                                     }
                                 }
                             }
+
+                            // Sort Item Template Screen
+                            SortMenu(
+                                visible = showSortScreen,
+                                onDismiss = { showSortScreen = false },
+                                sortOrder = SortOrder.Field(SortField.Name, OrderDirection.Asc),
+                                onApply = { field, direction ->
+                                    itemVM.setSortOrder(SortOrder.Field(field, direction))
+                                },
+                                onRandom = {
+                                    itemVM.setSortRandom()
+                                }
+                            )
 
                             // Create Item Template Screen
                             CreateTemplateScreen(
@@ -326,6 +331,74 @@ class Activity2 : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @Composable
+    private fun SortMenu(
+        visible: Boolean,
+        onDismiss: () -> Unit,
+        sortOrder: SortOrder,
+        onApply: (SortField, OrderDirection) -> Unit,
+        onRandom: () -> Unit
+    ) {
+        var selectedField by remember { mutableStateOf(
+            (sortOrder as? SortOrder.Field)?.field ?: SortField.Name
+        ) }
+
+        var selectedDirection by remember { mutableStateOf(
+            (sortOrder as? SortOrder.Field)?.direction ?: OrderDirection.Asc
+        ) }
+
+        screen.MiniScreen(
+            visible = visible,
+            onDismiss = onDismiss,
+            title = "Sort Groups",
+            content = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Category")
+                    button.SortFieldRadio(
+                        current = selectedField,
+                        field = SortField.Name,
+                        label = "Name",
+                        onSelect = { selectedField = it }
+                    )
+
+                    Text("Direction")
+                    button.SortDirectionRadio(
+                        current = selectedDirection,
+                        direction = OrderDirection.Asc,
+                        label = "Ascending",
+                        onSelect = { selectedDirection = it }
+                    )
+                    button.SortDirectionRadio(
+                        current = selectedDirection,
+                        direction = OrderDirection.Desc,
+                        label = "Descending",
+                        onSelect = { selectedDirection = it }
+                    )
+
+                    button.Generic(
+                        onClick = {
+                            onRandom()
+                            onDismiss()
+                        },
+                        placeholder = "Random"
+                    )
+                }
+            },
+            confirmButton = {
+                button.Generic(
+                    onClick = {
+                        onApply(selectedField, selectedDirection)
+                        onDismiss()
+                    },
+                    placeholder = "Apply"
+                )
+            },
+            cancelButton = {
+                button.Generic(onDismiss, "Cancel")
+            }
+        )
     }
 
     @Composable
