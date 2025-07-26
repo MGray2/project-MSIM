@@ -2,8 +2,11 @@ package com.ms.im.database.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import com.ms.im.OrderDirection
 import com.ms.im.database.entities.AttributeInstance
 import com.ms.im.database.entities.AttributeTemplate
+import com.ms.im.database.entities.Item
 import com.ms.im.database.manager.AttributeManager
 import com.ms.im.database.repositories.AttributeInstanceRepository
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +17,19 @@ class AttributeInstanceViewModel(
     private val repository: AttributeInstanceRepository,
     private val attributeManager: AttributeManager
 ) : ViewModel() {
+
+    fun getPagedItemsSortedByAttribute(
+        templateId: Long,
+        sortAttrTemplate: AttributeTemplate,
+        order: OrderDirection
+    ): Flow<PagingData<Item>> {
+        return attributeManager.getPagedItemsSortedByAttribute(
+            templateId = templateId,
+            sortAttrTemplateId = sortAttrTemplate.id,
+            type = sortAttrTemplate.type,
+            order = order
+        )
+    }
 
     // Get all attribute instances for a given item
     fun getAllByItem(itemId: Long): Flow<List<AttributeInstance>> = repository.getAllByItem(itemId)

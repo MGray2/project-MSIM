@@ -5,6 +5,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +19,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ms.im.MyApp
 import com.ms.im.database.viewmodels.GroupViewModel
 import com.ms.im.database.entities.Group
@@ -42,6 +46,8 @@ import com.ms.im.ui.theme.IMTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.ms.im.OrderDirection
+import com.ms.im.SortField
 import com.ms.im.SortOrder
 import kotlinx.coroutines.launch
 
@@ -69,6 +75,7 @@ class Activity1 : ComponentActivity() {
             var showCreateScreen by remember { mutableStateOf(false) }
             var showUpdateScreen by remember { mutableStateOf(false) }
             var showDeleteScreen by remember { mutableStateOf(false) }
+            var showSortScreen by remember { mutableStateOf(false) }
             var enableUpdate by remember { mutableStateOf(false) }
             var enableDelete by remember { mutableStateOf(false) }
             var newGroupName by remember { mutableStateOf("")}
@@ -132,19 +139,20 @@ class Activity1 : ComponentActivity() {
                         input.Field(searchText.value, { groupVM.setSearchQuery(it) }, "Search")
 
                         // Sort Button
-                        button.Cycle(
-                            options = SortOrder.entries,
-                            selected = sortOrder,
-                            onOptionChange = { groupVM.setSortOrder(it) },
-                            labelMapper = { order ->
-                                when (order) {
-                                    SortOrder.NameAsc -> "Name ↑"
-                                    SortOrder.NameDesc -> "Name ↓"
-                                    SortOrder.IdAsc -> "ID ↑"
-                                    SortOrder.IdDesc -> "ID ↓"
-                                    SortOrder.Random -> "Random"
-                                } }
-                        )
+//                        button.Cycle(
+//                            options = SortOrder.entries,
+//                            selected = sortOrder,
+//                            onOptionChange = { groupVM.setSortOrder(it) },
+//                            labelMapper = { order ->
+//                                when (order) {
+//                                    SortOrder.NameAsc -> "Name ↑"
+//                                    SortOrder.NameDesc -> "Name ↓"
+//                                    SortOrder.IdAsc -> "ID ↑"
+//                                    SortOrder.IdDesc -> "ID ↓"
+//                                    SortOrder.Random -> "Random"
+//                                } }
+//                        )
+                        button.Generic({ showSortScreen = true }, "Sort")
                         Box(modifier = Modifier.fillMaxSize()) {
 
                             // Window to see groups
@@ -208,6 +216,19 @@ class Activity1 : ComponentActivity() {
                                     }
                                 }
                             }
+                            // Sort Mini-screen
+                            SortMenu(
+                                visible = showSortScreen,
+                                onDismiss = { showSortScreen = false },
+                                sortOrder = SortOrder.Field(SortField.Name, OrderDirection.Asc),
+                                onApply = { field, direction ->
+                                    groupVM.setSortOrder(SortOrder.Field(field, direction))
+                                },
+                                onRandom = {
+                                    groupVM.setSortOrder(SortOrder.Random)
+                                }
+                            )
+
                             // Create Group Mini-screen
                             CreateGroupScreen(
                                 visible = showCreateScreen,
@@ -255,6 +276,132 @@ class Activity1 : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    private fun SortMenu(
+        visible: Boolean,
+        onDismiss: () -> Unit,
+        sortOrder: SortOrder,
+        onApply: (SortField, OrderDirection) -> Unit,
+        onRandom: () -> Unit
+    ) {
+        var selectedField by remember { mutableStateOf(
+            (sortOrder as? SortOrder.Field)?.field ?: SortField.Name
+        ) }
+
+        var selectedDirection by remember { mutableStateOf(
+            (sortOrder as? SortOrder.Field)?.direction ?: OrderDirection.Asc
+        ) }
+
+        screen.MiniScreen(
+            visible = visible,
+            onDismiss = onDismiss,
+            title = "Sort",
+            content = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Sort by:")
+                    SortFieldRadio(
+                        current = selectedField,
+                        field = SortField.Name,
+                        label = "Name",
+                        onSelect = { selectedField = it }
+                    )
+
+                    Text("Direction:")
+                    SortDirectionRadio(
+                        current = selectedDirection,
+                        direction = OrderDirection.Asc,
+                        label = "Ascending",
+                        onSelect = { selectedDirection = it }
+                    )
+                    SortDirectionRadio(
+                        current = selectedDirection,
+                        direction = OrderDirection.Desc,
+                        label = "Descending",
+                        onSelect = { selectedDirection = it }
+                    )
+
+                    button.Generic(
+                        onClick = {
+                            onRandom()
+                            onDismiss()
+                        },
+                        placeholder = "Random Sort"
+                    )
+                }
+            },
+            confirmButton = {
+                button.Generic(
+                    onClick = {
+                        onApply(selectedField, selectedDirection)
+                        onDismiss()
+                    },
+                    placeholder = "Start"
+                )
+            },
+            cancelButton = {
+                button.Generic(onDismiss, "Cancel")
+            }
+        )
+    }
+
+    // Temp
+    @Composable
+    fun SortFieldRadio(
+        current: SortField,
+        field: SortField,
+        label: String,
+        onSelect: (SortField) -> Unit
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            RadioButton(
+                selected = current == field,
+                onClick = { onSelect(field) }
+            )
+            Text(label)
+        }
+    }
+
+    // Temp
+    @Composable
+    fun SortDirectionRadio(
+        current: OrderDirection,
+        direction: OrderDirection,
+        label: String,
+        onSelect: (OrderDirection) -> Unit
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            RadioButton(
+                selected = current == direction,
+                onClick = { onSelect(direction) }
+            )
+            Text(label)
+        }
+    }
+
+    // Temp
+    @Composable
+    fun RadioRow(label: String, selected: Boolean, onClick: () -> Unit) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(vertical = 4.dp)
+        ) {
+            RadioButton(
+                selected = selected,
+                onClick = onClick
+            )
+            Text(label, fontSize = 18.sp)
         }
     }
 

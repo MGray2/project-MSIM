@@ -34,6 +34,9 @@ interface ItemDao {
     @Query("SELECT * FROM item_table WHERE templateId = :templateId AND isTemplate = 0")
     fun getInstancesByTemplate(templateId: Long): Flow<List<Item>>
 
+    @Query("SELECT * FROM item_table WHERE id = :itemId AND isTemplate = 0")
+    fun getPagedItemInstances(itemId: Long): PagingSource<Int, Item>
+
     // Search functions
     @Query("""
         SELECT * FROM item_table 

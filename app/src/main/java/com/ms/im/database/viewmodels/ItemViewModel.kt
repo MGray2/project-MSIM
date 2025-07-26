@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.ms.im.OrderDirection
+import com.ms.im.SortField
 import com.ms.im.SortOrder
 import com.ms.im.database.repositories.ItemRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class ItemViewModel(
     private val repository: ItemRepository
@@ -32,8 +35,11 @@ class ItemViewModel(
     val searchQuery: StateFlow<String> = _searchQuery
 
     // For sort cycle button
-    private val _sortOrder = MutableStateFlow(SortOrder.NameAsc)
+    private val _sortOrder = MutableStateFlow<SortOrder>(SortOrder.Field(SortField.Name, OrderDirection.Asc))
     val sortOrder: StateFlow<SortOrder> = _sortOrder
+
+    private val _randomSeed = MutableStateFlow(0)
+    private val randomSeed: StateFlow<Int> = _randomSeed
 
     private val _itemsInGroup = MutableStateFlow<List<Item>>(emptyList())
     val itemsInGroup: StateFlow<List<Item>> = _itemsInGroup.asStateFlow()
@@ -55,7 +61,7 @@ class ItemViewModel(
             .distinctUntilChanged()
             .flatMapLatest { (query, sort, groupId) ->
                 if (groupId != null) {
-                    repository.getPagedTemplatesFiltered(query, groupId, sort)
+                    repository.getPagedTemplatesFilteredSorted(query, groupId, sort)
                 } else {
                     emptyFlow()
                 }
@@ -67,8 +73,23 @@ class ItemViewModel(
         _searchQuery.value = query
     }
 
-    fun setSortOrder(order: SortOrder) {
-        _sortOrder.value = order
+    fun setSortField(field: SortField) {
+        val current = _sortOrder.value
+        if (current is SortOrder.Field) {
+            _sortOrder.value = SortOrder.Field(field, current.direction)
+        }
+    }
+
+    fun setSortDirection(direction: OrderDirection) {
+        val current = _sortOrder.value
+        if (current is SortOrder.Field) {
+            _sortOrder.value = SortOrder.Field(current.field, direction)
+        }
+    }
+
+    fun setSortRandom() {
+        _sortOrder.value = SortOrder.Random
+        _randomSeed.value = Random.nextInt()
     }
 
     fun setSelectedGroupId(id: Long?) {

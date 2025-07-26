@@ -3,6 +3,8 @@ package com.ms.im.database.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
+import com.ms.im.OrderDirection
+import com.ms.im.SortField
 import com.ms.im.SortOrder
 import com.ms.im.database.entities.Group
 import com.ms.im.database.repositories.GroupRepository
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class GroupViewModel(
     private val repository: GroupRepository
@@ -47,25 +50,41 @@ class GroupViewModel(
     val searchQuery: StateFlow<String> = _searchQuery
 
     // For sort cycle button
-    private val _sortOrder = MutableStateFlow(SortOrder.NameAsc)
+    private val _sortOrder = MutableStateFlow<SortOrder>(SortOrder.Field(SortField.Name, OrderDirection.Asc))
     val sortOrder: StateFlow<SortOrder> = _sortOrder
 
     private val _randomSeed = MutableStateFlow(0)
-    val randomSeed: StateFlow<Int> = _randomSeed
+    private val randomSeed: StateFlow<Int> = _randomSeed
 
     // Get
     suspend fun getById(id: Long): Group? = repository.getById(id)
 
     // Setters
+    fun setSortOrder(order: SortOrder) {
+        _sortOrder.value = order
+    }
+
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
 
-    fun setSortOrder(order: SortOrder) {
-        _sortOrder.value = order
-        if (order == SortOrder.Random) {
-            _randomSeed.value = kotlin.random.Random.nextInt()
+    fun setSortField(field: SortField) {
+        val current = _sortOrder.value
+        if (current is SortOrder.Field) {
+            _sortOrder.value = SortOrder.Field(field, current.direction)
         }
+    }
+
+    fun setSortDirection(direction: OrderDirection) {
+        val current = _sortOrder.value
+        if (current is SortOrder.Field) {
+            _sortOrder.value = SortOrder.Field(current.field, direction)
+        }
+    }
+
+    fun setSortRandom() {
+        _sortOrder.value = SortOrder.Random
+        _randomSeed.value = Random.nextInt()
     }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)

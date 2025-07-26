@@ -158,19 +158,19 @@ class Activity2 : ComponentActivity() {
                         input.Field(searchText.value, { itemVM.setSearchQuery(it) }, "Search")
 
                         // Sort Button
-                        button.Cycle(
-                            options = SortOrder.entries,
-                            selected = sortOrder,
-                            onOptionChange = { itemVM.setSortOrder(it) },
-                            labelMapper = { order ->
-                                when (order) {
-                                    SortOrder.NameAsc -> "Name ↑"
-                                    SortOrder.NameDesc -> "Name ↓"
-                                    SortOrder.IdAsc -> "ID ↑"
-                                    SortOrder.IdDesc -> "ID ↓"
-                                    SortOrder.Random -> "Random"
-                                } }
-                        )
+//                        button.Cycle(
+//                            options = SortOrder.entries,
+//                            selected = sortOrder,
+//                            onOptionChange = { itemVM.setSortOrder(it) },
+//                            labelMapper = { order ->
+//                                when (order) {
+//                                    SortOrder.NameAsc -> "Name ↑"
+//                                    SortOrder.NameDesc -> "Name ↓"
+//                                    SortOrder.IdAsc -> "ID ↑"
+//                                    SortOrder.IdDesc -> "ID ↓"
+//                                    SortOrder.Random -> "Random"
+//                                } }
+//                        )
 
                         Box(modifier = Modifier.fillMaxSize()) {
 

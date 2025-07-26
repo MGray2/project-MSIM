@@ -39,9 +39,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.ms.im.AttributeInstanceDraft
 import com.ms.im.AttributeType
 import com.ms.im.MyApp
+import com.ms.im.OrderDirection
 import com.ms.im.database.entities.AttributeInstance
 import com.ms.im.database.entities.AttributeTemplate
 import com.ms.im.database.entities.Group
@@ -84,6 +86,7 @@ class Activity3 : ComponentActivity() {
             var showCreateScreen by remember { mutableStateOf(false) }
             var showUpdateScreen by remember { mutableStateOf(false) }
             var showDeleteScreen by remember { mutableStateOf(false) }
+            var showSortScreen by remember { mutableStateOf(false) }
             var enableUpdate by remember { mutableStateOf(false) }
             var enableDelete by remember { mutableStateOf(false) }
             val scope = rememberCoroutineScope()
@@ -182,6 +185,8 @@ class Activity3 : ComponentActivity() {
 
                             button.Generic({ showDeleteScreen = true },
                                 placeholder = "Delete", enabled = enableDelete)
+
+                            button.Generic({ showSortScreen = true }, "Sort")
                         }
 
 
@@ -331,7 +336,7 @@ class Activity3 : ComponentActivity() {
     }
 
     @Composable
-    fun CreateInstanceScreen(
+    private fun CreateInstanceScreen(
         visible: Boolean,
         onDismiss: () -> Unit,
         onSubmit: (List<AttributeInstanceDraft>) -> Unit,
@@ -361,7 +366,7 @@ class Activity3 : ComponentActivity() {
     }
 
     @Composable
-    fun UpdateInstanceScreen(
+    private fun UpdateInstanceScreen(
         visible: Boolean,
         onDismiss: () -> Unit,
         onSubmit: (Long?, List<AttributeInstanceDraft>) -> Unit,
@@ -388,7 +393,7 @@ class Activity3 : ComponentActivity() {
     }
 
     @Composable
-    fun DeleteInstanceScreen(
+    private fun DeleteInstanceScreen(
         visible: Boolean,
         onDismiss: () -> Unit,
         onSubmit: (Long?) -> Unit,
@@ -481,4 +486,7 @@ class Activity3 : ComponentActivity() {
             }
         }
     }
+
+    @Composable
+    private fun SortScreen() {}
 }

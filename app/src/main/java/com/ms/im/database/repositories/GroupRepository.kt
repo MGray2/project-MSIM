@@ -3,6 +3,9 @@ package com.ms.im.database.repositories
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.PagingSource
+import com.ms.im.OrderDirection
+import com.ms.im.SortField
 import com.ms.im.SortOrder
 import com.ms.im.database.daos.GroupDao
 import com.ms.im.database.entities.Group
@@ -29,12 +32,18 @@ class GroupRepository(private val dao: GroupDao) {
         order: SortOrder,
         randomSeed: Int = 0
     ): Flow<PagingData<Group>> {
-        val pagingSourceFactory = when (order) {
-            SortOrder.NameAsc -> { -> dao.searchGroupsByNameAsc(query) }
-            SortOrder.NameDesc -> { -> dao.searchGroupsByNameDesc(query) }
-            SortOrder.IdAsc -> { -> dao.searchGroupsByIdAsc(query) }
-            SortOrder.IdDesc -> { -> dao.searchGroupsByIdDesc(query) }
-            SortOrder.Random -> { -> dao.searchGroupsByRandom(query, randomSeed) }
+        val pagingSourceFactory: () -> PagingSource<Int, Group> = when (order) {
+            is SortOrder.Field -> {
+                when (order.field) {
+                    SortField.Name -> {
+                        when (order.direction) {
+                            OrderDirection.Asc -> { { dao.searchGroupsByNameAsc(query) } }
+                            OrderDirection.Desc -> { { dao.searchGroupsByNameDesc(query) } }
+                        }
+                    }
+                }
+            }
+            is SortOrder.Random -> { { dao.searchGroupsByRandom(query, randomSeed) } }
         }
 
         return Pager(

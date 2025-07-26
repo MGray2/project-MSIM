@@ -1,14 +1,20 @@
 package com.ms.im.database.manager
 
-import android.util.Log
-import androidx.lifecycle.viewModelScope
+
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import androidx.room.withTransaction
+import com.ms.im.AttributeType
+import com.ms.im.OrderDirection
 import com.ms.im.database.AppDatabase
 import com.ms.im.database.entities.AttributeInstance
 import com.ms.im.database.entities.AttributeTemplate
+import com.ms.im.database.entities.Item
 import com.ms.im.database.repositories.AttributeInstanceRepository
 import com.ms.im.database.repositories.AttributeTemplateRepository
 import com.ms.im.database.repositories.ItemRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
 class AttributeManager(
@@ -74,4 +80,55 @@ class AttributeManager(
             }
         }
     }
+
+    fun getPagedItemsSortedByAttribute(
+        templateId: Long,
+        sortAttrTemplateId: Long,
+        type: AttributeType,
+        order: OrderDirection
+    ): Flow<PagingData<Item>> {
+        val dao = database.itemWithAttributesDao() // a DAO dedicated to join-based queries
+
+        val pagingSourceFactory = when (type to order) {
+            AttributeType.TEXT to OrderDirection.Asc -> {
+                { dao.getItemsSortedByTextAsc(templateId, sortAttrTemplateId) }
+            }
+            AttributeType.TEXT to OrderDirection.Desc -> {
+                { dao.getItemsSortedByTextDesc(templateId, sortAttrTemplateId) }
+            }
+            AttributeType.TAG to OrderDirection.Asc -> {
+                { dao.getItemsSortedByTextAsc(templateId, sortAttrTemplateId)}
+            }
+            AttributeType.TAG to OrderDirection.Desc -> {
+                { dao.getItemsSortedByTextDesc(templateId, sortAttrTemplateId) }
+            }
+            AttributeType.NUMBER to OrderDirection.Asc -> {
+                { dao.getItemsSortedByNumberAsc(templateId, sortAttrTemplateId) }
+            }
+            AttributeType.NUMBER to OrderDirection.Desc -> {
+                { dao.getItemsSortedByNumberDesc(templateId, sortAttrTemplateId) }
+            }
+            AttributeType.DECIMAL to OrderDirection.Asc -> {
+                { dao.getItemsSortedByDecimalAsc(templateId, sortAttrTemplateId)}
+            }
+            AttributeType.DECIMAL to OrderDirection.Desc -> {
+                { dao.getItemsSortedByDecimalDesc(templateId, sortAttrTemplateId)}
+            }
+            AttributeType.STATE to OrderDirection.Asc -> {
+                { dao.getItemsSortedByBoolAsc(templateId, sortAttrTemplateId) }
+            }
+            AttributeType.STATE to OrderDirection.Desc -> {
+                { dao.getItemsSortedByBoolDesc(templateId, sortAttrTemplateId)}
+            }
+            else -> {
+                { dao.getItemsSortedByTextAsc(templateId, sortAttrTemplateId) }
+            }
+        }
+
+        return Pager(
+            config = PagingConfig(pageSize = 20),
+            pagingSourceFactory = pagingSourceFactory
+        ).flow
+    }
+
 }

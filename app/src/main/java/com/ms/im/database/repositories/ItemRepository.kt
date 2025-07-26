@@ -4,6 +4,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
+import com.ms.im.OrderDirection
+import com.ms.im.SortField
 import com.ms.im.SortOrder
 import com.ms.im.database.daos.ItemDao
 import com.ms.im.database.entities.Item
@@ -12,18 +14,24 @@ import kotlinx.coroutines.flow.Flow
 class ItemRepository(private val dao: ItemDao) {
 
     // Getters
-    fun getPagedTemplatesFiltered(
+    fun getPagedTemplatesFilteredSorted(
         query: String,
         groupId: Long,
         order: SortOrder,
         randomSeed: Int = 0
     ): Flow<PagingData<Item>> {
-        val pagingSourceFactory = when (order) {
-            SortOrder.NameAsc -> { { dao.searchTemplatesByNameAsc(query, groupId) } }
-            SortOrder.NameDesc -> { { dao.searchTemplatesByNameDesc(query, groupId) } }
-            SortOrder.IdAsc -> { { dao.searchTemplatesByIdAsc(query, groupId) } }
-            SortOrder.IdDesc -> { { dao.searchTemplatesByIdDesc(query, groupId) } }
-            SortOrder.Random -> { { dao.searchTemplatesByRandom(query, groupId, randomSeed) } }
+        val pagingSourceFactory: () -> PagingSource<Int, Item> = when (order) {
+            is SortOrder.Field -> {
+                when (order.field) {
+                    SortField.Name -> {
+                        when (order.direction) {
+                            OrderDirection.Asc -> { { dao.searchTemplatesByNameAsc(query, groupId) } }
+                            OrderDirection.Desc -> { { dao.searchTemplatesByNameDesc(query, groupId) } }
+                        }
+                    }
+                }
+            }
+            is SortOrder.Random -> { { dao.searchTemplatesByRandom(query, groupId, randomSeed)} }
         }
 
         return Pager(
