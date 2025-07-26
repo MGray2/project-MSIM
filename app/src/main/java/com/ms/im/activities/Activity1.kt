@@ -139,20 +139,8 @@ class Activity1 : ComponentActivity() {
                         input.Field(searchText.value, { groupVM.setSearchQuery(it) }, "Search")
 
                         // Sort Button
-//                        button.Cycle(
-//                            options = SortOrder.entries,
-//                            selected = sortOrder,
-//                            onOptionChange = { groupVM.setSortOrder(it) },
-//                            labelMapper = { order ->
-//                                when (order) {
-//                                    SortOrder.NameAsc -> "Name ↑"
-//                                    SortOrder.NameDesc -> "Name ↓"
-//                                    SortOrder.IdAsc -> "ID ↑"
-//                                    SortOrder.IdDesc -> "ID ↓"
-//                                    SortOrder.Random -> "Random"
-//                                } }
-//                        )
                         button.Generic({ showSortScreen = true }, "Sort")
+
                         Box(modifier = Modifier.fillMaxSize()) {
 
                             // Window to see groups
@@ -225,7 +213,7 @@ class Activity1 : ComponentActivity() {
                                     groupVM.setSortOrder(SortOrder.Field(field, direction))
                                 },
                                 onRandom = {
-                                    groupVM.setSortOrder(SortOrder.Random)
+                                    groupVM.setSortRandom()
                                 }
                             )
 
@@ -298,25 +286,25 @@ class Activity1 : ComponentActivity() {
         screen.MiniScreen(
             visible = visible,
             onDismiss = onDismiss,
-            title = "Sort",
+            title = "Sort Groups",
             content = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Sort by:")
-                    SortFieldRadio(
+                    Text("Category")
+                    button.SortFieldRadio(
                         current = selectedField,
                         field = SortField.Name,
                         label = "Name",
                         onSelect = { selectedField = it }
                     )
 
-                    Text("Direction:")
-                    SortDirectionRadio(
+                    Text("Direction")
+                    button.SortDirectionRadio(
                         current = selectedDirection,
                         direction = OrderDirection.Asc,
                         label = "Ascending",
                         onSelect = { selectedDirection = it }
                     )
-                    SortDirectionRadio(
+                    button.SortDirectionRadio(
                         current = selectedDirection,
                         direction = OrderDirection.Desc,
                         label = "Descending",
@@ -328,7 +316,7 @@ class Activity1 : ComponentActivity() {
                             onRandom()
                             onDismiss()
                         },
-                        placeholder = "Random Sort"
+                        placeholder = "Random"
                     )
                 }
             },
@@ -338,71 +326,13 @@ class Activity1 : ComponentActivity() {
                         onApply(selectedField, selectedDirection)
                         onDismiss()
                     },
-                    placeholder = "Start"
+                    placeholder = "Apply"
                 )
             },
             cancelButton = {
                 button.Generic(onDismiss, "Cancel")
             }
         )
-    }
-
-    // Temp
-    @Composable
-    fun SortFieldRadio(
-        current: SortField,
-        field: SortField,
-        label: String,
-        onSelect: (SortField) -> Unit
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            RadioButton(
-                selected = current == field,
-                onClick = { onSelect(field) }
-            )
-            Text(label)
-        }
-    }
-
-    // Temp
-    @Composable
-    fun SortDirectionRadio(
-        current: OrderDirection,
-        direction: OrderDirection,
-        label: String,
-        onSelect: (OrderDirection) -> Unit
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            RadioButton(
-                selected = current == direction,
-                onClick = { onSelect(direction) }
-            )
-            Text(label)
-        }
-    }
-
-    // Temp
-    @Composable
-    fun RadioRow(label: String, selected: Boolean, onClick: () -> Unit) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onClick() }
-                .padding(vertical = 4.dp)
-        ) {
-            RadioButton(
-                selected = selected,
-                onClick = onClick
-            )
-            Text(label, fontSize = 18.sp)
-        }
     }
 
     @Composable
